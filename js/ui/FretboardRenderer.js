@@ -38,6 +38,7 @@ export class FretboardRenderer {
 
     // Touch gesture support
     this.touchStartDistance = 0;
+    this.initialScale = 1;
     this.currentScale = 1;
     this.touchStartX = 0;
     this.touchStartY = 0;
@@ -318,11 +319,19 @@ export class FretboardRenderer {
     group.setAttribute('data-fret', fret);
     group.setAttribute('data-note', note);
 
+    // Responsive circle radius based on screen size
+    let circleRadius = 16;
+    let fontSize = 12;
+    if (this.isSmallScreen) {
+      circleRadius = window.innerWidth < 640 ? 20 : 18;
+      fontSize = window.innerWidth < 640 ? 14 : 13;
+    }
+
     // Circle
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
-    circle.setAttribute('r', '16');
+    circle.setAttribute('r', circleRadius.toString());
     circle.setAttribute('class', isRoot ? 'note-circle-root' : 'note-circle');
     circle.setAttribute('fill', isRoot ? '#FF6B6B' : '#4ECDC4');
     circle.setAttribute('stroke', '#fff');
@@ -331,11 +340,11 @@ export class FretboardRenderer {
     // Label
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     text.setAttribute('x', x);
-    text.setAttribute('y', y + 5);
+    text.setAttribute('y', y + (circleRadius * 0.3)); // Dynamic vertical centering
     text.setAttribute('class', 'note-label');
     text.setAttribute('text-anchor', 'middle');
     text.setAttribute('fill', '#fff');
-    text.setAttribute('font-size', '12');
+    text.setAttribute('font-size', fontSize.toString());
     text.setAttribute('font-weight', 'bold');
 
     // Set label based on display mode
@@ -508,11 +517,12 @@ export class FretboardRenderer {
       if (e.touches.length === 2) {
         e.preventDefault();
         this.touchStartDistance = this.getTouchDistance(e.touches);
+        this.initialScale = this.currentScale; // Save current scale at start of gesture
       } else if (e.touches.length === 1) {
         this.touchStartX = e.touches[0].clientX;
         this.touchStartY = e.touches[0].clientY;
       }
-    });
+    }, { passive: false });
 
     this.container.addEventListener('touchmove', (e) => {
       if (e.touches.length === 2) {
@@ -539,12 +549,18 @@ export class FretboardRenderer {
   applyZoom(scale) {
     if (!this.svg) return;
 
-    const newScale = Math.max(0.5, Math.min(3, this.currentScale * scale));
+    // Calculate new scale relative to initial scale
+    const newScale = Math.max(0.5, Math.min(3, this.initialScale * scale));
     this.currentScale = newScale;
 
     this.svg.style.transform = `scale(${newScale})`;
     this.svg.style.transformOrigin = 'top left';
-    this.container.classList.add('zoomed');
+
+    if (newScale > 1.1) {
+      this.container.classList.add('zoomed');
+    } else {
+      this.container.classList.remove('zoomed');
+    }
   }
 
   /**
@@ -554,6 +570,7 @@ export class FretboardRenderer {
     if (!this.svg) return;
 
     this.currentScale = 1;
+    this.initialScale = 1;
     this.svg.style.transform = 'scale(1)';
     this.container.classList.remove('zoomed');
   }

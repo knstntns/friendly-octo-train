@@ -105,14 +105,9 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Larger touch targets for mobile */
+  /* Larger touch targets for mobile - radius set in JavaScript */
   .note-group {
     cursor: pointer;
-  }
-
-  .note-circle,
-  .note-circle-root {
-    r: 18 !important;
   }
 
   /* Remove hover effects on mobile */
@@ -123,17 +118,6 @@
   /* Better touch feedback */
   .note-group:active {
     transform: scale(1.1);
-  }
-}
-
-@media (max-width: 640px) {
-  .note-circle,
-  .note-circle-root {
-    r: 20 !important;
-  }
-
-  .note-label {
-    font-size: 14px !important;
   }
 }
 
