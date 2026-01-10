@@ -11,11 +11,20 @@ export class FretboardRenderer {
       return;
     }
 
+    // Detect mobile device
+    this.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    this.isSmallScreen = window.innerWidth < 768;
+
+    // Adjust defaults based on screen size
+    const defaultFretWidth = this.isSmallScreen ? 50 : 60;
+    const defaultStringSpacing = this.isSmallScreen ? 35 : 50;
+    const defaultNumFrets = this.isSmallScreen ? 15 : 24;
+
     this.options = {
-      numFrets: options.numFrets || 24,
+      numFrets: options.numFrets || defaultNumFrets,
       numStrings: options.numStrings || 6,
-      fretWidth: options.fretWidth || 60,
-      stringSpacing: options.stringSpacing || 50,
+      fretWidth: options.fretWidth || defaultFretWidth,
+      stringSpacing: options.stringSpacing || defaultStringSpacing,
       nutWidth: options.nutWidth || 10,
       displayMode: options.displayMode || 'notes', // 'notes', 'degrees', 'intervals'
       tuning: options.tuning || TUNINGS.standard,
@@ -27,7 +36,15 @@ export class FretboardRenderer {
     this.currentPositions = [];
     this.noteElements = new Map();
 
+    // Touch gesture support
+    this.touchStartDistance = 0;
+    this.currentScale = 1;
+    this.touchStartX = 0;
+    this.touchStartY = 0;
+
     this.init();
+    this.setupTouchGestures();
+    this.setupResponsiveResize();
   }
 
   /**
@@ -348,6 +365,11 @@ export class FretboardRenderer {
    * Handle note click event
    */
   onNoteClick(position) {
+    // Haptic feedback for mobile devices
+    if (this.isMobile && 'vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+
     if (this.options.onNoteClick) {
       this.options.onNoteClick(position);
     }
@@ -457,6 +479,111 @@ export class FretboardRenderer {
    */
   getPositions() {
     return this.currentPositions;
+  }
+
+  /**
+   * Setup touch gestures for mobile devices
+   */
+  setupTouchGestures() {
+    if (!this.container || !this.isMobile) return;
+
+    let lastTap = 0;
+
+    // Double-tap to reset zoom
+    this.container.addEventListener('touchend', (e) => {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTap;
+
+      if (tapLength < 300 && tapLength > 0) {
+        // Double tap detected
+        this.resetZoom();
+        e.preventDefault();
+      }
+
+      lastTap = currentTime;
+    });
+
+    // Pinch to zoom
+    this.container.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        this.touchStartDistance = this.getTouchDistance(e.touches);
+      } else if (e.touches.length === 1) {
+        this.touchStartX = e.touches[0].clientX;
+        this.touchStartY = e.touches[0].clientY;
+      }
+    });
+
+    this.container.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const currentDistance = this.getTouchDistance(e.touches);
+        const scale = currentDistance / this.touchStartDistance;
+        this.applyZoom(scale);
+      }
+    }, { passive: false });
+  }
+
+  /**
+   * Calculate distance between two touch points
+   */
+  getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  /**
+   * Apply zoom to fretboard
+   */
+  applyZoom(scale) {
+    if (!this.svg) return;
+
+    const newScale = Math.max(0.5, Math.min(3, this.currentScale * scale));
+    this.currentScale = newScale;
+
+    this.svg.style.transform = `scale(${newScale})`;
+    this.svg.style.transformOrigin = 'top left';
+    this.container.classList.add('zoomed');
+  }
+
+  /**
+   * Reset zoom to default
+   */
+  resetZoom() {
+    if (!this.svg) return;
+
+    this.currentScale = 1;
+    this.svg.style.transform = 'scale(1)';
+    this.container.classList.remove('zoomed');
+  }
+
+  /**
+   * Setup responsive resize handler
+   */
+  setupResponsiveResize() {
+    let resizeTimer;
+
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const wasSmallScreen = this.isSmallScreen;
+        this.isSmallScreen = window.innerWidth < 768;
+
+        // Recreate fretboard if screen size category changed
+        if (wasSmallScreen !== this.isSmallScreen) {
+          this.options.fretWidth = this.isSmallScreen ? 50 : 60;
+          this.options.stringSpacing = this.isSmallScreen ? 35 : 50;
+          this.createSVG();
+          this.render();
+
+          // Restore notes if they exist
+          if (this.currentPositions.length > 0) {
+            this.updateNotes(this.currentPositions);
+          }
+        }
+      }, 250);
+    });
   }
 }
 

@@ -78,15 +78,62 @@
   pointer-events: none;
 }
 
+/* Fretboard container */
+#fretboard-container {
+  position: relative;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+}
+
+#fretboard-container:active {
+  cursor: grabbing;
+}
+
+#fretboard-container.zoomed {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Responsive fretboard */
 @media (max-width: 768px) {
   .fretboard {
-    min-width: 900px;
+    min-width: 100%;
   }
 
   #fretboard-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Larger touch targets for mobile */
+  .note-group {
+    cursor: pointer;
+  }
+
+  .note-circle,
+  .note-circle-root {
+    r: 18 !important;
+  }
+
+  /* Remove hover effects on mobile */
+  .note-group:hover {
+    transform: none;
+  }
+
+  /* Better touch feedback */
+  .note-group:active {
+    transform: scale(1.1);
+  }
+}
+
+@media (max-width: 640px) {
+  .note-circle,
+  .note-circle-root {
+    r: 20 !important;
+  }
+
+  .note-label {
+    font-size: 14px !important;
   }
 }
 
