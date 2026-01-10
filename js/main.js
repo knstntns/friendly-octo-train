@@ -196,6 +196,11 @@ class GuitarScalesApp {
   handleChordClick(chord, cardElement) {
     console.log('Chord clicked:', chord);
 
+    // Haptic feedback for mobile devices
+    if ('vibrate' in navigator) {
+      navigator.vibrate(20);
+    }
+
     // Clear any pending highlight reset
     if (this.highlightTimeout) {
       clearTimeout(this.highlightTimeout);
@@ -204,7 +209,7 @@ class GuitarScalesApp {
 
     // Remove previous selection styling
     if (this.selectedChordCard) {
-      this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+      this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'selected');
       this.selectedChordCard.classList.add('border-gray-200');
     }
 
@@ -213,9 +218,9 @@ class GuitarScalesApp {
       cardElement.classList.remove('border-gray-200');
       const isPurple = cardElement.classList.contains('hover:border-purple-400');
       if (isPurple) {
-        cardElement.classList.add('border-purple-500', 'bg-purple-50');
+        cardElement.classList.add('border-purple-500', 'bg-purple-50', 'selected');
       } else {
-        cardElement.classList.add('border-blue-500', 'bg-blue-50');
+        cardElement.classList.add('border-blue-500', 'bg-blue-50', 'selected');
       }
       this.selectedChordCard = cardElement;
     }
@@ -223,19 +228,28 @@ class GuitarScalesApp {
     // Highlight chord tones on fretboard
     this.fretboard.highlightNotes(chord.notes);
 
-    // Reset highlights after 3 seconds
+    // Scroll fretboard into view on mobile
+    if (window.innerWidth < 768) {
+      const fretboardContainer = document.getElementById('fretboard-container');
+      if (fretboardContainer) {
+        fretboardContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    // Reset highlights after 4 seconds (longer on mobile for better UX)
+    const timeout = window.innerWidth < 768 ? 4000 : 3000;
     this.highlightTimeout = setTimeout(() => {
       this.fretboard.resetHighlights();
 
       // Remove selection styling
       if (this.selectedChordCard) {
-        this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+        this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'selected');
         this.selectedChordCard.classList.add('border-gray-200');
         this.selectedChordCard = null;
       }
 
       this.highlightTimeout = null;
-    }, 3000);
+    }, timeout);
   }
 
   /**

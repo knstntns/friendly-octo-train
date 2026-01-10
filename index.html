@@ -19,9 +19,9 @@
   <header class="bg-white shadow-md sticky top-0 z-50">
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">Guitar Scales Explorer</h1>
-          <p class="text-sm text-gray-600 mt-1">Learn scales, modes, and chords on the guitar fretboard</p>
+        <div class="flex-1">
+          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Guitar Scales Explorer</h1>
+          <p class="text-xs md:text-sm text-gray-600 mt-1 hidden sm:block">Learn scales, modes, and chords on the guitar fretboard</p>
         </div>
         <div class="hidden md:flex items-center space-x-4">
           <a href="https://github.com" target="_blank" class="text-gray-600 hover:text-gray-900">
@@ -110,7 +110,13 @@
 
         <!-- Fretboard Card -->
         <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Fretboard</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Fretboard</h2>
+            <div class="md:hidden text-xs text-gray-500">
+              <span class="inline-block">🔍 Pinch to zoom</span>
+              <span class="inline-block ml-2">↔️ Scroll to pan</span>
+            </div>
+          </div>
           <div id="fretboard-container" class="w-full overflow-x-auto">
             <!-- SVG fretboard will be rendered here -->
           </div>

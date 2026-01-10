@@ -130,6 +130,60 @@ input[type="checkbox"] {
   .grid {
     gap: 1rem;
   }
+
+  /* Mobile-optimized chord cards */
+  .chord-card {
+    min-height: 80px;
+    padding: 1rem !important;
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+  }
+
+  .chord-card:active {
+    transform: scale(0.97);
+    transition: transform 0.1s;
+  }
+
+  /* Better touch targets */
+  select,
+  input[type="radio"],
+  input[type="checkbox"],
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Optimize padding for mobile */
+  .bg-white {
+    padding: 1rem !important;
+  }
+
+  header {
+    padding: 0.75rem 0 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Compact header for small screens */
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+  }
+
+  /* Stack chord cards more tightly */
+  #chord-panel,
+  #seventh-chord-panel {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Better spacing on very small screens */
+  main {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
 }
 
 /* Focus styles for accessibility */
@@ -216,4 +270,117 @@ main {
 
 .tooltip:hover::after {
   opacity: 1;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Remove hover tooltips on mobile */
+  .tooltip::after {
+    display: none;
+  }
+
+  /* Better visual feedback for selections */
+  .chord-card.selected {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Improve scrollbar visibility on mobile */
+  #fretboard-container::-webkit-scrollbar {
+    height: 12px;
+  }
+
+  #fretboard-container::-webkit-scrollbar-thumb {
+    background: #3B82F6;
+  }
+
+  /* Add safe area insets for notched devices */
+  body {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Landscape mode optimizations for mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+  header {
+    padding: 0.5rem 0 !important;
+  }
+
+  h1 {
+    font-size: 1.125rem !important;
+  }
+
+  h2 {
+    font-size: 1rem !important;
+  }
+
+  .bg-white {
+    padding: 0.75rem !important;
+  }
+
+  main {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}
+
+/* Prevent text selection on interactive elements */
+.chord-card,
+.note-group {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  border-top-color: #3B82F6;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pull-to-refresh hint */
+.refresh-hint {
+  text-align: center;
+  padding: 0.5rem;
+  color: #6B7280;
+  font-size: 0.875rem;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .refresh-hint {
+    display: block;
+  }
+}
+
+/* Improved button styles for mobile */
+@media (max-width: 768px) {
+  button,
+  .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+}
+
+/* Status bar for iOS */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
 }
