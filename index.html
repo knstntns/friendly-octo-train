@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive guitar scales explorer - Learn scales, chords, and music theory on the fretboard">
+  <title>Guitar Scales Explorer</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/fretboard.css">
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Guitar Scales Explorer</h1>
+          <p class="text-sm text-gray-600 mt-1">Learn scales, modes, and chords on the guitar fretboard</p>
+        </div>
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="https://github.com" target="_blank" class="text-gray-600 hover:text-gray-900">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+      <!-- Control Panel (Left Sidebar) -->
+      <aside class="lg:col-span-1 space-y-4">
+
+        <!-- Scale Controls Card -->
+        <div class="bg-white rounded-lg shadow-md p-5">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Controls</h2>
+
+          <!-- Key Selector -->
+          <div class="mb-4">
+            <label for="key-selector" class="block text-sm font-medium text-gray-700 mb-2">
+              Key
+            </label>
+            <select id="key-selector" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <!-- Scale Selector -->
+          <div class="mb-4">
+            <label for="scale-selector" class="block text-sm font-medium text-gray-700 mb-2">
+              Scale Type
+            </label>
+            <select id="scale-selector" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+
+          <!-- Display Mode -->
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Display Mode
+            </label>
+            <div class="space-y-2">
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" name="display-mode" value="notes" checked class="mr-2 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Note Names</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" name="display-mode" value="degrees" class="mr-2 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Scale Degrees</span>
+              </label>
+              <label class="flex items-center cursor-pointer">
+                <input type="radio" name="display-mode" value="intervals" class="mr-2 text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Intervals</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Show Chords Toggle -->
+          <div class="mb-4">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" id="show-chords" checked class="mr-2 text-blue-600 focus:ring-blue-500 rounded">
+              <span class="text-sm text-gray-700">Show Harmonized Chords</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Scale Info Card -->
+        <div class="bg-white rounded-lg shadow-md p-5">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Scale Information</h2>
+          <div id="scale-info" class="text-sm">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Main Content Area (Fretboard & Chords) -->
+      <section class="lg:col-span-3 space-y-6">
+
+        <!-- Fretboard Card -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Fretboard</h2>
+          <div id="fretboard-container" class="w-full overflow-x-auto">
+            <!-- SVG fretboard will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Triads Card -->
+        <div class="bg-white rounded-lg shadow-md p-6" id="triads-section">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Harmonized Triads</h2>
+          <div id="chord-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <!-- Chord cards will be populated here -->
+          </div>
+        </div>
+
+        <!-- Seventh Chords Card -->
+        <div class="bg-white rounded-lg shadow-md p-6" id="sevenths-section">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Seventh Chords</h2>
+          <div id="seventh-chord-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            <!-- Seventh chord cards will be populated here -->
+          </div>
+        </div>
+
+        <!-- Common Progressions Card -->
+        <div class="bg-white rounded-lg shadow-md p-6" id="progressions-section">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Common Chord Progressions</h2>
+          <div id="progressions-panel" class="space-y-3">
+            <!-- Progressions will be populated here -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-gray-200 mt-12 py-6">
+    <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
+      <p>Built with ❤️ for guitarists and music learners</p>
+      <p class="mt-2">
+        <a href="#" class="text-blue-600 hover:text-blue-800">GitHub</a> |
+        <a href="#" class="text-blue-600 hover:text-blue-800">Documentation</a> |
+        <a href="#" class="text-blue-600 hover:text-blue-800">About</a>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Main App Script -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>

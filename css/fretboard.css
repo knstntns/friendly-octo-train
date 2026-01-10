@@ -1,0 +1,143 @@
+/* Fretboard-specific styles */
+
+.fretboard {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+.fretboard-background {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.fret {
+  transition: stroke 0.2s ease;
+}
+
+.string {
+  transition: stroke-width 0.2s ease;
+}
+
+.fret-marker {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.fret-number {
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
+
+.tuning-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+}
+
+/* Note elements */
+.note-group {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  transform-origin: center;
+}
+
+.note-group:hover {
+  transform: scale(1.15);
+}
+
+.note-group:active {
+  transform: scale(0.95);
+}
+
+.note-circle,
+.note-circle-root {
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.note-group:hover .note-circle,
+.note-group:hover .note-circle-root {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.note-circle-root {
+  animation: pulse-root 2s ease-in-out infinite;
+}
+
+@keyframes pulse-root {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.note-label {
+  font-family: system-ui, -apple-system, sans-serif;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Responsive fretboard */
+@media (max-width: 768px) {
+  .fretboard {
+    min-width: 900px;
+  }
+
+  #fretboard-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Scroll styling */
+#fretboard-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+#fretboard-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+#fretboard-container::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#fretboard-container::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Note animations */
+@keyframes note-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.note-group {
+  animation: note-appear 0.3s ease-out;
+}
+
+/* Highlighted notes */
+.note-group.highlighted .note-circle {
+  fill: #FFD93D;
+  stroke: #FF6B6B;
+  stroke-width: 3;
+  animation: highlight-pulse 1s ease-in-out infinite;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
