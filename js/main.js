@@ -15,6 +15,8 @@ class GuitarScalesApp {
     this.currentScale = null;
     this.currentChords = null;
     this.showChords = true;
+    this.highlightTimeout = null;
+    this.selectedChordCard = null;
 
     this.init();
   }
@@ -86,6 +88,13 @@ class GuitarScalesApp {
    */
   generateChords() {
     if (!this.currentScale) return;
+
+    // Clear any pending highlights and selections when regenerating chords
+    if (this.highlightTimeout) {
+      clearTimeout(this.highlightTimeout);
+      this.highlightTimeout = null;
+    }
+    this.selectedChordCard = null;
 
     // Generate triads and seventh chords
     const triads = this.chordEngine.harmonizeTriads(this.currentScale);
@@ -184,16 +193,49 @@ class GuitarScalesApp {
   /**
    * Handle chord click
    */
-  handleChordClick(chord) {
+  handleChordClick(chord, cardElement) {
     console.log('Chord clicked:', chord);
+
+    // Clear any pending highlight reset
+    if (this.highlightTimeout) {
+      clearTimeout(this.highlightTimeout);
+      this.highlightTimeout = null;
+    }
+
+    // Remove previous selection styling
+    if (this.selectedChordCard) {
+      this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+      this.selectedChordCard.classList.add('border-gray-200');
+    }
+
+    // Add selection styling to current card
+    if (cardElement) {
+      cardElement.classList.remove('border-gray-200');
+      const isPurple = cardElement.classList.contains('hover:border-purple-400');
+      if (isPurple) {
+        cardElement.classList.add('border-purple-500', 'bg-purple-50');
+      } else {
+        cardElement.classList.add('border-blue-500', 'bg-blue-50');
+      }
+      this.selectedChordCard = cardElement;
+    }
 
     // Highlight chord tones on fretboard
     this.fretboard.highlightNotes(chord.notes);
 
-    // Reset highlights after 2 seconds
-    setTimeout(() => {
+    // Reset highlights after 3 seconds
+    this.highlightTimeout = setTimeout(() => {
       this.fretboard.resetHighlights();
-    }, 2000);
+
+      // Remove selection styling
+      if (this.selectedChordCard) {
+        this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+        this.selectedChordCard.classList.add('border-gray-200');
+        this.selectedChordCard = null;
+      }
+
+      this.highlightTimeout = null;
+    }, 3000);
   }
 
   /**

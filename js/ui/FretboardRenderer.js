@@ -409,6 +409,24 @@ export class FretboardRenderer {
    * Highlight specific notes
    */
   highlightNotes(noteNames) {
+    // First, reset all highlights to their original state
+    this.noteElements.forEach((element, key) => {
+      const circle = element.querySelector('circle');
+      const isRoot = element.classList.contains('root-note');
+
+      // Reset to original colors
+      if (isRoot) {
+        circle.setAttribute('fill', '#FF6B6B');
+        circle.setAttribute('stroke', '#fff');
+        circle.setAttribute('stroke-width', '2');
+      } else {
+        circle.setAttribute('fill', '#4ECDC4');
+        circle.setAttribute('stroke', '#fff');
+        circle.setAttribute('stroke-width', '2');
+      }
+    });
+
+    // Then apply highlights to the specified notes
     this.noteElements.forEach((element, key) => {
       const noteData = element.getAttribute('data-note');
       const circle = element.querySelector('circle');

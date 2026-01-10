@@ -206,7 +206,7 @@ export class ControlPanel {
     chordCards.forEach((card, index) => {
       card.addEventListener('click', () => {
         if (this.options.onChordClick) {
-          this.options.onChordClick(chords.triads[index]);
+          this.options.onChordClick(chords.triads[index], card);
         }
       });
     });
@@ -240,7 +240,7 @@ export class ControlPanel {
     chordCards.forEach((card, index) => {
       card.addEventListener('click', () => {
         if (this.options.onChordClick) {
-          this.options.onChordClick(chords.sevenths[index]);
+          this.options.onChordClick(chords.sevenths[index], card);
         }
       });
     });
