@@ -1,6 +1,7 @@
 // SVG Fretboard Renderer
 
 import { FRET_MARKERS, DOUBLE_MARKERS, TUNINGS } from '../data/constants.js';
+import { getNoteIndex } from '../core/MusicTheory.js';
 
 export class FretboardRenderer {
   constructor(containerId, options = {}) {
@@ -426,12 +427,17 @@ export class FretboardRenderer {
       }
     });
 
+    // Convert chord notes to indices for enharmonic comparison
+    const noteIndices = noteNames.map(note => getNoteIndex(note));
+
     // Then apply highlights to the specified notes
     this.noteElements.forEach((element, key) => {
       const noteData = element.getAttribute('data-note');
       const circle = element.querySelector('circle');
+      const noteIndex = getNoteIndex(noteData);
 
-      if (noteNames.includes(noteData)) {
+      // Compare by note index to handle enharmonic equivalents (C# vs Db)
+      if (noteIndices.includes(noteIndex)) {
         circle.setAttribute('fill', '#FFD93D');
         circle.setAttribute('stroke', '#FF6B6B');
         circle.setAttribute('stroke-width', '3');
