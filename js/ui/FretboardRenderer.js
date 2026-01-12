@@ -168,7 +168,8 @@ export class FretboardRenderer {
 
     for (let string = 0; string < this.options.numStrings; string++) {
       const y = margin + (string * this.options.stringSpacing);
-      const stringWidth = 0.5 + (this.options.numStrings - string) * 0.3;
+      // Thin strings at top (high E), thick strings at bottom (low E)
+      const stringWidth = 0.5 + (string + 1) * 0.3;
 
       const stringLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       stringLine.setAttribute('x1', 0);
@@ -573,6 +574,27 @@ export class FretboardRenderer {
     this.initialScale = 1;
     this.svg.style.transform = 'scale(1)';
     this.container.classList.remove('zoomed');
+  }
+
+  /**
+   * Set zoom level programmatically
+   */
+  setZoom(scale) {
+    if (!this.svg) return;
+
+    // Clamp scale between 0.5 and 3
+    const clampedScale = Math.max(0.5, Math.min(3, scale));
+
+    this.currentScale = clampedScale;
+    this.initialScale = clampedScale;
+    this.svg.style.transform = `scale(${clampedScale})`;
+    this.svg.style.transformOrigin = 'top left';
+
+    if (clampedScale !== 1) {
+      this.container.classList.add('zoomed');
+    } else {
+      this.container.classList.remove('zoomed');
+    }
   }
 
   /**

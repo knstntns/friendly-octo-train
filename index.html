@@ -19,12 +19,26 @@
   <header class="bg-white shadow-md sticky top-0 z-50">
     <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
-        <div class="flex-1">
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Guitar Scales Explorer</h1>
+        <!-- Mobile Menu Button -->
+        <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors" aria-label="Toggle menu">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+
+        <div class="flex-1 ml-4 lg:ml-0">
+          <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Guitar Scales Explorer</h1>
           <p class="text-xs md:text-sm text-gray-600 mt-1 hidden sm:block">Learn scales, modes, and chords on the guitar fretboard</p>
         </div>
-        <div class="hidden md:flex items-center space-x-4">
-          <a href="https://github.com" target="_blank" class="text-gray-600 hover:text-gray-900">
+
+        <!-- Keyboard Shortcuts Hint -->
+        <div class="hidden xl:flex items-center space-x-2 text-xs text-gray-500">
+          <kbd class="px-2 py-1 bg-gray-100 rounded border">?</kbd>
+          <span>for shortcuts</span>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-4 ml-4">
+          <a href="https://github.com" target="_blank" class="text-gray-600 hover:text-gray-900 transition-colors">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
             </svg>
@@ -39,7 +53,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
       <!-- Control Panel (Left Sidebar) -->
-      <aside class="lg:col-span-1 space-y-4">
+      <aside id="control-panel" class="lg:col-span-1 space-y-4 hidden lg:block transition-all duration-300">
 
         <!-- Scale Controls Card -->
         <div class="bg-white rounded-lg shadow-md p-5">
@@ -109,15 +123,35 @@
       <section class="lg:col-span-3 space-y-6">
 
         <!-- Fretboard Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <div class="flex justify-between items-center mb-4">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
             <h2 class="text-xl font-semibold text-gray-800">Fretboard</h2>
-            <div class="md:hidden text-xs text-gray-500">
-              <span class="inline-block">🔍 Pinch to zoom</span>
-              <span class="inline-block ml-2">↔️ Scroll to pan</span>
+
+            <!-- Zoom Controls -->
+            <div class="flex items-center gap-2">
+              <div class="hidden sm:flex items-center gap-1 text-xs text-gray-500 mr-2">
+                <span>Zoom:</span>
+              </div>
+              <button id="zoom-out" class="p-2 rounded-md bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors" aria-label="Zoom out">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                </svg>
+              </button>
+              <button id="zoom-reset" class="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors text-xs font-medium text-gray-700" aria-label="Reset zoom">
+                100%
+              </button>
+              <button id="zoom-in" class="p-2 rounded-md bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors" aria-label="Zoom in">
+                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                </svg>
+              </button>
+              <div class="md:hidden text-xs text-gray-500 ml-2 hidden sm:block">
+                <span>or pinch</span>
+              </div>
             </div>
           </div>
-          <div id="fretboard-container" class="w-full overflow-x-auto">
+
+          <div id="fretboard-container" class="w-full overflow-x-auto rounded-lg border border-gray-200" style="touch-action: pan-x pan-y;">
             <!-- SVG fretboard will be rendered here -->
           </div>
         </div>
@@ -162,6 +196,58 @@
       </p>
     </div>
   </footer>
+
+  <!-- Keyboard Shortcuts Modal -->
+  <div id="shortcuts-modal" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+      <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <h3 class="text-xl font-bold text-gray-800">Keyboard Shortcuts</h3>
+        <button id="close-shortcuts" class="p-1 hover:bg-gray-100 rounded transition-colors" aria-label="Close">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="px-6 py-4 space-y-3">
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Toggle menu</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">M</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Zoom in</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">+</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Zoom out</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">-</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Reset zoom</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">0</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Next key</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">→</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Previous key</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">←</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Toggle display mode</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">D</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+          <span class="text-sm text-gray-700">Toggle chords</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">C</kbd>
+        </div>
+        <div class="flex justify-between items-center py-2">
+          <span class="text-sm text-gray-700">Show this help</span>
+          <kbd class="px-2 py-1 bg-gray-100 rounded border text-xs font-mono">?</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Main App Script -->
   <script type="module" src="js/main.js"></script>

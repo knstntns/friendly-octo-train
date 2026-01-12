@@ -322,6 +322,9 @@ class GuitarScalesApp {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('DOM loaded, starting app...');
   window.guitarScalesApp = new GuitarScalesApp();
+
+  // Initialize UX enhancements
+  initializeUXEnhancements();
 });
 
 // Save preferences before page unload
@@ -330,3 +333,232 @@ window.addEventListener('beforeunload', () => {
     window.guitarScalesApp.savePreferences();
   }
 });
+
+/**
+ * Initialize UX enhancements (mobile menu, zoom, keyboard shortcuts)
+ */
+function initializeUXEnhancements() {
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const controlPanel = document.getElementById('control-panel');
+
+  if (mobileMenuBtn && controlPanel) {
+    mobileMenuBtn.addEventListener('click', () => {
+      controlPanel.classList.toggle('mobile-open');
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    });
+
+    // Close menu when clicking outside
+    controlPanel.addEventListener('click', (e) => {
+      if (e.target === controlPanel) {
+        controlPanel.classList.remove('mobile-open');
+      }
+    });
+  }
+
+  // Zoom controls
+  const zoomInBtn = document.getElementById('zoom-in');
+  const zoomOutBtn = document.getElementById('zoom-out');
+  const zoomResetBtn = document.getElementById('zoom-reset');
+
+  if (zoomInBtn && zoomOutBtn && zoomResetBtn && window.guitarScalesApp) {
+    const fretboard = window.guitarScalesApp.fretboard;
+
+    zoomInBtn.addEventListener('click', () => {
+      const newScale = Math.min(fretboard.currentScale + 0.2, 3);
+      fretboard.setZoom(newScale);
+      updateZoomDisplay(newScale);
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+      const newScale = Math.max(fretboard.currentScale - 0.2, 0.5);
+      fretboard.setZoom(newScale);
+      updateZoomDisplay(newScale);
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    });
+
+    zoomResetBtn.addEventListener('click', () => {
+      fretboard.setZoom(1);
+      updateZoomDisplay(1);
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    });
+  }
+
+  // Keyboard shortcuts modal
+  const shortcutsModal = document.getElementById('shortcuts-modal');
+  const closeShortcuts = document.getElementById('close-shortcuts');
+
+  if (closeShortcuts && shortcutsModal) {
+    closeShortcuts.addEventListener('click', () => {
+      shortcutsModal.classList.remove('show');
+    });
+
+    // Close on background click
+    shortcutsModal.addEventListener('click', (e) => {
+      if (e.target === shortcutsModal) {
+        shortcutsModal.classList.remove('show');
+      }
+    });
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Ignore if typing in input fields
+    if (e.target.matches('input, select, textarea')) {
+      return;
+    }
+
+    const app = window.guitarScalesApp;
+    if (!app) return;
+
+    switch(e.key) {
+      case '?':
+        // Show shortcuts modal
+        if (shortcutsModal) {
+          shortcutsModal.classList.add('show');
+        }
+        e.preventDefault();
+        break;
+
+      case 'Escape':
+        // Close modals
+        if (shortcutsModal) {
+          shortcutsModal.classList.remove('show');
+        }
+        if (controlPanel) {
+          controlPanel.classList.remove('mobile-open');
+        }
+        break;
+
+      case 'm':
+      case 'M':
+        // Toggle mobile menu
+        if (controlPanel) {
+          controlPanel.classList.toggle('mobile-open');
+        }
+        e.preventDefault();
+        break;
+
+      case '+':
+      case '=':
+        // Zoom in
+        if (app.fretboard) {
+          const newScale = Math.min(app.fretboard.currentScale + 0.2, 3);
+          app.fretboard.setZoom(newScale);
+          updateZoomDisplay(newScale);
+        }
+        e.preventDefault();
+        break;
+
+      case '-':
+      case '_':
+        // Zoom out
+        if (app.fretboard) {
+          const newScale = Math.max(app.fretboard.currentScale - 0.2, 0.5);
+          app.fretboard.setZoom(newScale);
+          updateZoomDisplay(newScale);
+        }
+        e.preventDefault();
+        break;
+
+      case '0':
+        // Reset zoom
+        if (app.fretboard) {
+          app.fretboard.setZoom(1);
+          updateZoomDisplay(1);
+        }
+        e.preventDefault();
+        break;
+
+      case 'ArrowRight':
+        // Next key
+        cycleKey(1);
+        e.preventDefault();
+        break;
+
+      case 'ArrowLeft':
+        // Previous key
+        cycleKey(-1);
+        e.preventDefault();
+        break;
+
+      case 'd':
+      case 'D':
+        // Toggle display mode
+        cycleDisplayMode();
+        e.preventDefault();
+        break;
+
+      case 'c':
+      case 'C':
+        // Toggle chords
+        const showChordsToggle = document.getElementById('show-chords');
+        if (showChordsToggle) {
+          showChordsToggle.checked = !showChordsToggle.checked;
+          showChordsToggle.dispatchEvent(new Event('change'));
+        }
+        e.preventDefault();
+        break;
+    }
+  });
+}
+
+/**
+ * Update zoom display percentage
+ */
+function updateZoomDisplay(scale) {
+  const zoomResetBtn = document.getElementById('zoom-reset');
+  if (zoomResetBtn) {
+    zoomResetBtn.textContent = `${Math.round(scale * 100)}%`;
+  }
+}
+
+/**
+ * Cycle through keys
+ */
+function cycleKey(direction) {
+  const keySelector = document.getElementById('key-selector');
+  if (!keySelector) return;
+
+  const currentIndex = keySelector.selectedIndex;
+  const newIndex = (currentIndex + direction + keySelector.options.length) % keySelector.options.length;
+
+  keySelector.selectedIndex = newIndex;
+  keySelector.dispatchEvent(new Event('change'));
+}
+
+/**
+ * Cycle through display modes
+ */
+function cycleDisplayMode() {
+  const displayModes = document.querySelectorAll('input[name="display-mode"]');
+  if (!displayModes.length) return;
+
+  let currentIndex = -1;
+  displayModes.forEach((radio, index) => {
+    if (radio.checked) {
+      currentIndex = index;
+    }
+  });
+
+  const nextIndex = (currentIndex + 1) % displayModes.length;
+  displayModes[nextIndex].checked = true;
+  displayModes[nextIndex].dispatchEvent(new Event('change'));
+}

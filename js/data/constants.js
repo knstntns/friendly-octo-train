@@ -11,14 +11,14 @@ export const ALTERNATE_NAMES = {
 };
 
 export const TUNINGS = {
-  standard: ['E', 'A', 'D', 'G', 'B', 'E'],
-  dropD: ['D', 'A', 'D', 'G', 'B', 'E'],
-  halfStepDown: ['D#', 'G#', 'C#', 'F#', 'A#', 'D#'],
-  wholestepDown: ['D', 'G', 'C', 'F', 'A', 'D'],
-  dropC: ['C', 'G', 'C', 'F', 'A', 'D'],
-  openG: ['D', 'G', 'D', 'G', 'B', 'D'],
-  openD: ['D', 'A', 'D', 'F#', 'A', 'D'],
-  dadgad: ['D', 'A', 'D', 'G', 'A', 'D']
+  standard: ['E', 'B', 'G', 'D', 'A', 'E'],  // High to Low (1st to 6th string)
+  dropD: ['E', 'B', 'G', 'D', 'A', 'D'],
+  halfStepDown: ['D#', 'A#', 'F#', 'C#', 'G#', 'D#'],
+  wholestepDown: ['D', 'A', 'F', 'C', 'G', 'D'],
+  dropC: ['D', 'A', 'F', 'C', 'G', 'C'],
+  openG: ['D', 'B', 'G', 'D', 'G', 'D'],
+  openD: ['D', 'A', 'F#', 'D', 'A', 'D'],
+  dadgad: ['D', 'A', 'G', 'D', 'A', 'D']
 };
 
 export const INTERVAL_NAMES = {
