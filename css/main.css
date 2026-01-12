@@ -384,3 +384,217 @@ main {
     padding-top: env(safe-area-inset-top);
   }
 }
+
+/* Mobile sidebar styles */
+#control-panel.mobile-open {
+  display: block !important;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  animation: fade-in 0.2s ease-out;
+}
+
+#control-panel.mobile-open > * {
+  background: white;
+  margin: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Zoom controls styling */
+#zoom-reset {
+  min-width: 60px;
+}
+
+/* Keyboard shortcuts modal animations */
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#shortcuts-modal.show {
+  display: flex !important;
+  animation: modal-fade-in 0.2s ease-out;
+}
+
+#shortcuts-modal.show > div {
+  animation: modal-slide-up 0.3s ease-out;
+}
+
+/* Tablet-specific optimizations (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Optimize grid for tablet portrait */
+  .lg\\:grid-cols-7 {
+    grid-template-columns: repeat(5, 1fr) !important;
+  }
+
+  /* Better spacing for tablets */
+  .container {
+    max-width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  /* Improve control panel layout on tablets */
+  aside {
+    display: block !important;
+  }
+
+  /* Larger touch targets for tablets */
+  .chord-card {
+    min-height: 90px;
+  }
+
+  /* Optimize fretboard size for tablets */
+  #fretboard-container {
+    max-height: 400px;
+  }
+}
+
+/* Tablet landscape (1024px - 1366px) */
+@media (min-width: 1024px) and (max-width: 1366px) {
+  .lg\\:grid-cols-7 {
+    grid-template-columns: repeat(6, 1fr) !important;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+}
+
+/* Enhanced chord card styles */
+.chord-card {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.chord-card.selected {
+  border-color: #3B82F6;
+  background: linear-gradient(to bottom, #EFF6FF, white);
+}
+
+.chord-card:hover:not(.selected) {
+  border-color: #E5E7EB;
+}
+
+/* Better visual hierarchy for chord info */
+.chord-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.25rem;
+}
+
+.chord-card .chord-quality {
+  font-size: 0.875rem;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+.chord-card .chord-notes {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  margin-top: 0.5rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Progressive enhancement for hover devices */
+@media (hover: hover) and (pointer: fine) {
+  .chord-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Prevent layout shift during loading */
+.chord-card,
+#chord-panel > *,
+#seventh-chord-panel > * {
+  min-height: 80px;
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus indicators for keyboard navigation */
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid #3B82F6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Accessibility improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Loading states */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Optimize for high-DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .fretboard,
+  .chord-card {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
