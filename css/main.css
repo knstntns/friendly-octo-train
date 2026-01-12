@@ -598,3 +598,122 @@ input:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* Key/Scale Indicator Styles */
+#key-scale-indicator {
+  transform-origin: center;
+}
+
+.scale-105 {
+  transform: scale(1.05);
+}
+
+#swipe-indicator {
+  z-index: 10;
+  transition: opacity 0.15s ease-out;
+}
+
+#swipe-indicator > div {
+  transition: background-color 0.2s ease;
+}
+
+/* Fretboard position-based note colors */
+.note-position-low {
+  fill: #10B981 !important; /* Green - Low position (frets 0-4) */
+}
+
+.note-position-middle {
+  fill: #3B82F6 !important; /* Blue - Middle position (frets 5-9) */
+}
+
+.note-position-high {
+  fill: #8B5CF6 !important; /* Purple - High position (frets 10-14) */
+}
+
+.note-position-very-high {
+  fill: #EC4899 !important; /* Pink - Very high position (frets 15+) */
+}
+
+/* Position badges for chord notes */
+.position-badge {
+  font-size: 8px;
+  font-weight: bold;
+  fill: white;
+  opacity: 0.9;
+}
+
+/* Enhanced note circle with position ring */
+.note-circle-enhanced {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Position legend styles */
+.position-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.position-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Swipe tutorial pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.swipe-hint-pulse {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Enhanced key indicator gradient */
+#key-scale-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+#key-scale-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transition: left 0.5s ease;
+}
+
+#key-scale-indicator.highlight::before {
+  left: 100%;
+}
+
+/* Mobile optimizations for swipe */
+@media (max-width: 768px) {
+  #swipe-indicator > div {
+    transform: scale(0.9);
+  }
+
+  #key-scale-indicator {
+    padding: 0.5rem 0.75rem;
+  }
+
+  #current-key-display {
+    font-size: 1.5rem;
+  }
+}

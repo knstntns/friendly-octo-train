@@ -360,6 +360,9 @@ function initializeUXEnhancements() {
     });
   }
 
+  // Initialize swipe gestures for key changes
+  initializeSwipeGestures();
+
   // Zoom controls
   const zoomInBtn = document.getElementById('zoom-in');
   const zoomOutBtn = document.getElementById('zoom-out');
@@ -561,4 +564,154 @@ function cycleDisplayMode() {
   const nextIndex = (currentIndex + 1) % displayModes.length;
   displayModes[nextIndex].checked = true;
   displayModes[nextIndex].dispatchEvent(new Event('change'));
+}
+
+/**
+ * Initialize swipe gestures for key changes
+ */
+function initializeSwipeGestures() {
+  const fretboardContainer = document.getElementById('fretboard-container');
+  if (!fretboardContainer) return;
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+  let isSwiping = false;
+  let swipeDirection = null;
+
+  const swipeIndicator = document.getElementById('swipe-indicator');
+  const swipeKeyDisplay = document.getElementById('swipe-key-display');
+  const swipeArrowLeft = document.getElementById('swipe-arrow-left');
+  const swipeArrowRight = document.getElementById('swipe-arrow-right');
+
+  const minSwipeDistance = 50; // Minimum distance for a swipe
+  const swipeThreshold = 80; // Distance to show preview
+  const swipeCommitThreshold = 120; // Distance to commit the change
+
+  fretboardContainer.addEventListener('touchstart', (e) => {
+    // Only track single finger swipes
+    if (e.touches.length !== 1) return;
+
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    isSwiping = false;
+    swipeDirection = null;
+  }, { passive: true });
+
+  fretboardContainer.addEventListener('touchmove', (e) => {
+    if (e.touches.length !== 1) return;
+
+    touchEndX = e.touches[0].clientX;
+    touchEndY = e.touches[0].clientY;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    // Determine if this is a horizontal swipe
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      isSwiping = true;
+      swipeDirection = deltaX > 0 ? 'right' : 'left';
+
+      // Show preview when swipe distance exceeds threshold
+      if (Math.abs(deltaX) > swipeThreshold && swipeIndicator && swipeKeyDisplay) {
+        const keySelector = document.getElementById('key-selector');
+        if (!keySelector) return;
+
+        const currentIndex = keySelector.selectedIndex;
+        const direction = swipeDirection === 'right' ? -1 : 1; // Right swipe = previous key
+        const newIndex = (currentIndex + direction + keySelector.options.length) % keySelector.options.length;
+        const newKey = keySelector.options[newIndex].value;
+
+        // Update preview
+        swipeKeyDisplay.textContent = newKey;
+        swipeArrowLeft.classList.toggle('hidden', swipeDirection !== 'right');
+        swipeArrowRight.classList.toggle('hidden', swipeDirection !== 'left');
+
+        // Show indicator with scale based on swipe distance
+        const opacity = Math.min((Math.abs(deltaX) - swipeThreshold) / (swipeCommitThreshold - swipeThreshold), 1);
+        swipeIndicator.style.opacity = opacity;
+
+        // Change background color when commit threshold is reached
+        const indicatorBg = swipeIndicator.querySelector('div');
+        if (Math.abs(deltaX) >= swipeCommitThreshold) {
+          indicatorBg.classList.remove('bg-blue-500');
+          indicatorBg.classList.add('bg-green-500');
+        } else {
+          indicatorBg.classList.remove('bg-green-500');
+          indicatorBg.classList.add('bg-blue-500');
+        }
+      }
+    }
+  }, { passive: true });
+
+  fretboardContainer.addEventListener('touchend', (e) => {
+    if (!isSwiping) return;
+
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    // Hide indicator
+    if (swipeIndicator) {
+      swipeIndicator.style.opacity = '0';
+    }
+
+    // Confirm it's a horizontal swipe
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) >= swipeCommitThreshold) {
+      const direction = deltaX > 0 ? -1 : 1; // Right swipe = previous key
+      cycleKey(direction);
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(15);
+      }
+
+      // Show success animation
+      if (swipeIndicator) {
+        const keyScaleIndicator = document.getElementById('key-scale-indicator');
+        if (keyScaleIndicator) {
+          keyScaleIndicator.classList.add('scale-105');
+          setTimeout(() => {
+            keyScaleIndicator.classList.remove('scale-105');
+          }, 200);
+        }
+      }
+    }
+
+    // Reset
+    isSwiping = false;
+    swipeDirection = null;
+  }, { passive: true });
+
+  // Update key/scale display when changed
+  updateKeyScaleDisplay();
+}
+
+/**
+ * Update the floating key/scale indicator
+ */
+function updateKeyScaleDisplay() {
+  const keySelector = document.getElementById('key-selector');
+  const scaleSelector = document.getElementById('scale-selector');
+  const currentKeyDisplay = document.getElementById('current-key-display');
+  const currentScaleDisplay = document.getElementById('current-scale-display');
+
+  if (!keySelector || !scaleSelector) return;
+
+  const updateDisplay = () => {
+    if (currentKeyDisplay) {
+      currentKeyDisplay.textContent = keySelector.value;
+    }
+    if (currentScaleDisplay) {
+      const scaleText = scaleSelector.options[scaleSelector.selectedIndex].text;
+      currentScaleDisplay.textContent = scaleText;
+    }
+  };
+
+  // Initial update
+  updateDisplay();
+
+  // Listen for changes
+  keySelector.addEventListener('change', updateDisplay);
+  scaleSelector.addEventListener('change', updateDisplay);
 }
