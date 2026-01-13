@@ -42,7 +42,7 @@ class GuitarScalesApp {
       onScaleChange: (data) => this.handleScaleChange(data),
       onKeyChange: (data) => this.handleKeyChange(data),
       onDisplayModeChange: (mode) => this.handleDisplayModeChange(mode),
-      onChordClick: (chord) => this.handleChordClick(chord)
+      onChordClick: (chord, cardElement) => this.handleChordClick(chord, cardElement)
     });
 
     // Setup show chords toggle
