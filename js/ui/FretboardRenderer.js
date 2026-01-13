@@ -328,15 +328,37 @@ export class FretboardRenderer {
       fontSize = window.innerWidth < 640 ? 14 : 13;
     }
 
-    // Circle
+    // Determine position-based color for non-root notes
+    let positionClass = '';
+    let fillColor = '#4ECDC4'; // Default teal
+
+    if (!isRoot) {
+      if (fret <= 4) {
+        positionClass = 'note-position-low';
+        fillColor = '#10B981'; // Green - Low position
+      } else if (fret <= 9) {
+        positionClass = 'note-position-middle';
+        fillColor = '#3B82F6'; // Blue - Middle position
+      } else if (fret <= 14) {
+        positionClass = 'note-position-high';
+        fillColor = '#8B5CF6'; // Purple - High position
+      } else {
+        positionClass = 'note-position-very-high';
+        fillColor = '#EC4899'; // Pink - Very high position
+      }
+    } else {
+      fillColor = '#FF6B6B'; // Red for root notes
+    }
+
+    // Circle with enhanced styling
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', x);
     circle.setAttribute('cy', y);
     circle.setAttribute('r', circleRadius.toString());
-    circle.setAttribute('class', isRoot ? 'note-circle-root' : 'note-circle');
-    circle.setAttribute('fill', isRoot ? '#FF6B6B' : '#4ECDC4');
+    circle.setAttribute('class', `${isRoot ? 'note-circle-root' : 'note-circle'} ${positionClass} note-circle-enhanced`);
+    circle.setAttribute('fill', fillColor);
     circle.setAttribute('stroke', '#fff');
-    circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('stroke-width', '2.5');
 
     // Label
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -361,6 +383,21 @@ export class FretboardRenderer {
 
     group.appendChild(circle);
     group.appendChild(text);
+
+    // Add position badge for chord notes (shows fret position region)
+    if (!isRoot && this.options.showPositionBadges) {
+      const positionLabel = fret <= 4 ? 'I' : fret <= 9 ? 'II' : fret <= 14 ? 'III' : 'IV';
+      const badge = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      badge.setAttribute('x', x + circleRadius - 2);
+      badge.setAttribute('y', y - circleRadius + 10);
+      badge.setAttribute('class', 'position-badge');
+      badge.setAttribute('text-anchor', 'end');
+      badge.setAttribute('fill', 'rgba(255, 255, 255, 0.9)');
+      badge.setAttribute('font-size', '9');
+      badge.setAttribute('font-weight', 'bold');
+      badge.textContent = positionLabel;
+      group.appendChild(badge);
+    }
 
     // Add click event
     group.style.cursor = 'pointer';
