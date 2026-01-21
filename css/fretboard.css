@@ -1,111 +1,178 @@
-/* Fretboard-specific styles */
+/* Enhanced Fretboard Styles */
 
 .fretboard {
   width: 100%;
   height: auto;
   max-width: 100%;
+  background: linear-gradient(to bottom, #2a1810 0%, #3d2817 100%);
+  border-radius: 8px;
+  padding: 8px;
 }
 
 .fretboard-background {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.25));
 }
 
+/* Frets with enhanced styling */
 .fret {
-  transition: stroke 0.2s ease;
+  transition: stroke 0.3s ease, opacity 0.3s ease;
+  stroke: #c0c0c0;
+  opacity: 0.9;
 }
 
+.fret:hover {
+  opacity: 1;
+  stroke: #d4d4d4;
+}
+
+/* Strings with better visual hierarchy */
 .string {
-  transition: stroke-width 0.2s ease;
+  transition: stroke-width 0.3s ease, opacity 0.3s ease;
+  stroke: #e8e8e8;
+  opacity: 0.95;
 }
 
+/* Enhanced fret markers (inlays) */
 .fret-marker {
-  opacity: 0.4;
-  transition: opacity 0.2s ease;
+  opacity: 0.35;
+  transition: opacity 0.3s ease, fill 0.3s ease;
+  fill: #8b7355;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
+.fret-marker:hover {
+  opacity: 0.5;
+  fill: #a08060;
+}
+
+/* Fret numbers with better typography */
 .fret-number {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-weight: 600;
   user-select: none;
+  fill: #6b7280;
+  transition: fill 0.3s ease;
 }
 
 .tuning-label {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
   user-select: none;
+  fill: #374151;
+  letter-spacing: 0.5px;
 }
 
-/* Note elements */
+/* Enhanced note elements */
 .note-group {
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: center;
 }
 
 .note-group:hover {
-  transform: scale(1.15);
+  transform: scale(1.2);
 }
 
 .note-group:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
+  transition: all 0.1s ease;
 }
 
-.note-circle,
+/* Note circles with professional styling */
+.note-circle {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 2;
+}
+
 .note-circle-root {
-  transition: all 0.3s ease;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 2.5;
+  animation: pulse-root-glow 2.5s ease-in-out infinite;
 }
 
 .note-group:hover .note-circle,
 .note-group:hover .note-circle-root {
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+  stroke-width: 3;
 }
 
-.note-circle-root {
-  animation: pulse-root 2s ease-in-out infinite;
-}
-
-@keyframes pulse-root {
+/* Enhanced root note pulse animation */
+@keyframes pulse-root-glow {
   0%, 100% {
     opacity: 1;
+    filter: drop-shadow(0 4px 8px rgba(239, 68, 68, 0.4));
   }
   50% {
-    opacity: 0.8;
+    opacity: 0.85;
+    filter: drop-shadow(0 6px 12px rgba(239, 68, 68, 0.6));
   }
 }
 
 .note-label {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
   user-select: none;
   pointer-events: none;
+  fill: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Fretboard container */
+/* Fretboard container with better interactions */
 #fretboard-container {
   position: relative;
   touch-action: pan-x pan-y;
   cursor: grab;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 12px;
+  padding: 16px;
+  transition: background 0.3s ease;
+}
+
+#fretboard-container:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #dbeafe 100%);
 }
 
 #fretboard-container:active {
   cursor: grabbing;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
 }
 
 #fretboard-container.zoomed {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  cursor: grab;
 }
 
-/* Responsive fretboard */
+/* Position indicators with enhanced styling */
+.position-indicator {
+  transition: all 0.3s ease;
+  opacity: 0.8;
+}
+
+.position-indicator:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* Responsive fretboard for mobile */
 @media (max-width: 768px) {
   .fretboard {
     min-width: 100%;
+    border-radius: 6px;
+    padding: 6px;
   }
 
   #fretboard-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    padding: 12px;
   }
 
-  /* Larger touch targets for mobile - radius set in JavaScript */
+  /* Optimized touch targets for mobile */
   .note-group {
     cursor: pointer;
   }
@@ -115,60 +182,212 @@
     transform: none;
   }
 
-  /* Better touch feedback */
+  /* Enhanced touch feedback */
   .note-group:active {
-    transform: scale(1.1);
+    transform: scale(1.15);
+    transition: transform 0.1s ease;
+  }
+
+  .fret-number {
+    font-size: 11px;
+  }
+
+  .tuning-label {
+    font-size: 12px;
   }
 }
 
-/* Scroll styling */
+/* Enhanced scrollbar styling */
 #fretboard-container::-webkit-scrollbar {
-  height: 8px;
+  height: 10px;
 }
 
 #fretboard-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: linear-gradient(to right, #f3f4f6, #e5e7eb);
+  border-radius: 5px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #fretboard-container::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: linear-gradient(to bottom, #9ca3af, #6b7280);
+  border-radius: 5px;
+  border: 2px solid #f3f4f6;
+  transition: background 0.3s ease;
 }
 
 #fretboard-container::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: linear-gradient(to bottom, #6b7280, #4b5563);
 }
 
-/* Note animations */
+#fretboard-container::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #4b5563, #374151);
+}
+
+/* Smooth note appear animation */
 @keyframes note-appear {
   from {
     opacity: 0;
-    transform: scale(0.5);
+    transform: scale(0.3) translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
 .note-group {
-  animation: note-appear 0.3s ease-out;
+  animation: note-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Highlighted notes */
+/* Enhanced highlighted notes with better colors */
 .note-group.highlighted .note-circle {
-  fill: #FFD93D;
-  stroke: #FF6B6B;
-  stroke-width: 3;
-  animation: highlight-pulse 1s ease-in-out infinite;
+  fill: #fbbf24;
+  stroke: #f59e0b;
+  stroke-width: 3.5;
+  animation: highlight-pulse-enhanced 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.6));
 }
 
-@keyframes highlight-pulse {
+.note-group.highlighted .note-circle-root {
+  fill: #ef4444;
+  stroke: #dc2626;
+  stroke-width: 4;
+  animation: highlight-pulse-root 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8));
+}
+
+@keyframes highlight-pulse-enhanced {
   0%, 100% {
     transform: scale(1);
+    opacity: 1;
   }
   50% {
-    transform: scale(1.1);
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}
+
+@keyframes highlight-pulse-root {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8));
+  }
+  50% {
+    transform: scale(1.2);
+    filter: drop-shadow(0 0 24px rgba(239, 68, 68, 1));
+  }
+}
+
+/* Chord highlight effect */
+.note-group.chord-tone .note-circle {
+  fill: #3b82f6;
+  stroke: #2563eb;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+  animation: chord-glow 2s ease-in-out infinite;
+}
+
+@keyframes chord-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.8));
+  }
+}
+
+/* Scale vs Chord differentiation */
+.note-group.scale-tone .note-circle {
+  fill: #10b981;
+  stroke: #059669;
+  opacity: 0.85;
+}
+
+.note-group.scale-tone:hover .note-circle {
+  opacity: 1;
+  fill: #14b8a6;
+  stroke: #0d9488;
+}
+
+/* Loading state */
+.fretboard.loading {
+  opacity: 0.5;
+  pointer-events: none;
+  filter: grayscale(0.3);
+}
+
+/* Focus states for accessibility */
+.note-group:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+/* Smooth zoom transitions */
+#fretboard-container.zooming {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Position labels with enhanced styling */
+.position-label {
+  font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  fill: #1f2937;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.position-label:hover {
+  opacity: 1;
+}
+
+/* Nut styling (position marker at fret 0) */
+.nut {
+  fill: #1f2937;
+  stroke: #111827;
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Fret markers at 3, 5, 7, 9, 12, 15 */
+.inlay-single {
+  fill: #d4af37;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.inlay-double {
+  fill: #d4af37;
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+.inlay-single:hover,
+.inlay-double:hover {
+  opacity: 0.5;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .fretboard {
+    background: linear-gradient(to bottom, #1a120c 0%, #2d1f17 100%);
+  }
+
+  #fretboard-container {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  }
+
+  #fretboard-container:hover {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  }
+
+  .fret-number,
+  .tuning-label {
+    fill: #94a3b8;
+  }
+
+  .position-label {
+    fill: #cbd5e1;
   }
 }
