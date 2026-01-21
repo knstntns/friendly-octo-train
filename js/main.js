@@ -82,8 +82,11 @@ class GuitarScalesApp {
     // Update fretboard
     this.fretboard.updateNotes(positions);
 
+    // Generate scale analysis
+    const scaleAnalysis = this.scaleEngine.getScaleAnalysis(this.currentScale);
+
     // Update scale info panel
-    this.controlPanel.updateScaleInfo(this.currentScale);
+    this.controlPanel.updateScaleInfo(this.currentScale, scaleAnalysis);
 
     // Generate and display chords
     if (this.showChords) {

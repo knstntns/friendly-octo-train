@@ -146,40 +146,51 @@ export class ControlPanel {
   }
 
   /**
-   * Update scale info panel
+   * Update scale info panel with comprehensive analysis
    */
-  updateScaleInfo(scale) {
-    const infoPanel = document.getElementById('scale-info');
-    if (!infoPanel) return;
-
-    const html = `
-      <div class="space-y-2">
-        <div class="flex justify-between items-center">
-          <span class="font-semibold text-gray-700">Scale:</span>
-          <span class="text-gray-900">${scale.name}</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="font-semibold text-gray-700">Root:</span>
-          <span class="text-gray-900">${scale.root}</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="font-semibold text-gray-700">Formula:</span>
-          <span class="text-gray-900 font-mono text-sm">${scale.formula}</span>
-        </div>
-        <div class="mt-3">
-          <span class="font-semibold text-gray-700">Notes:</span>
-          <div class="flex flex-wrap gap-2 mt-2">
-            ${scale.notes.map((note, i) => `
-              <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                ${note} ${scale.degrees[i] ? `(${scale.degrees[i]})` : ''}
-              </span>
-            `).join('')}
+  updateScaleInfo(scale, scaleAnalysis) {
+    // Update basic info
+    const basicInfoPanel = document.getElementById('scale-basic-info');
+    if (basicInfoPanel) {
+      const html = `
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Scale:</span>
+            <span class="text-sm font-bold text-gray-900">${scale.name}</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Formula:</span>
+            <span class="text-sm font-mono text-gray-900">${scale.formula}</span>
           </div>
         </div>
-      </div>
-    `;
+      `;
+      basicInfoPanel.innerHTML = html;
+    }
 
-    infoPanel.innerHTML = html;
+    // Update analysis table
+    const tableBody = document.getElementById('scale-analysis-body');
+    if (tableBody && scaleAnalysis) {
+      const html = scaleAnalysis.map((entry, index) => {
+        const isRoot = index === 0;
+        const rowClass = isRoot ? 'bg-blue-50' : index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+
+        return `
+          <tr class="${rowClass} border-b border-gray-200 hover:bg-blue-100 transition-colors">
+            <td class="p-2 font-bold text-gray-900">${entry.degreeNumeral}</td>
+            <td class="p-2">
+              <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${isRoot ? 'border-2 border-blue-600 bg-white text-blue-600 font-bold' : 'bg-gray-800 text-white'} text-xs">
+                ${entry.note}
+              </span>
+            </td>
+            <td class="p-2 font-semibold text-gray-800">${entry.chordType}</td>
+            <td class="p-2 text-gray-600 hidden sm:table-cell">${entry.extensions}</td>
+            <td class="p-2 text-gray-600 hidden md:table-cell">${entry.mode}</td>
+          </tr>
+        `;
+      }).join('');
+
+      tableBody.innerHTML = html;
+    }
   }
 
   /**
