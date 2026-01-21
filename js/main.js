@@ -5,6 +5,7 @@ import { ChordEngine } from './core/ChordEngine.js';
 import { FretboardRenderer } from './ui/FretboardRenderer.js';
 import { ControlPanel } from './ui/ControlPanel.js';
 import { TUNINGS } from './data/constants.js';
+import { getChordVoicings } from './data/chordShapes.js';
 
 class GuitarScalesApp {
   constructor() {
@@ -354,52 +355,61 @@ class GuitarScalesApp {
   }
 
   /**
-   * Generate chord voicings for display
-   * Returns common chord shapes on the guitar
+   * Generate chord voicings for display using real guitar chord shapes
    */
   generateChordVoicings(chord) {
+    // Use the chord shapes library for accurate voicings
+    const voicings = getChordVoicings(chord.root, chord.quality, 4);
+
+    // If no voicings found, fall back to basic chord shape generation
+    if (voicings.length === 0) {
+      return this.generateFallbackVoicings(chord);
+    }
+
+    return voicings;
+  }
+
+  /**
+   * Fallback chord voicing generation for chords not in library
+   */
+  generateFallbackVoicings(chord) {
     const voicings = [];
     const tuning = ['E', 'A', 'D', 'G', 'B', 'E'];
-
-    // Define common chord shape patterns (root position, 1st inversion, etc.)
-    // These are relative positions for major, minor, and 7th chords
-
-    // For simplicity, generate 3-4 common positions across the fretboard
-    const positions = [0, 3, 5, 7, 10, 12]; // Common root positions
+    const positions = [0, 3, 5, 7]; // Common positions
 
     positions.forEach(startFret => {
-      const shape = this.getChordShape(chord, startFret, tuning);
+      const shape = this.generateBasicShape(chord, startFret, tuning);
       if (shape && shape.frets.some(f => f >= 0)) {
         voicings.push(shape);
       }
     });
 
-    return voicings.slice(0, 4); // Return up to 4 voicings
+    return voicings.slice(0, 4);
   }
 
   /**
-   * Get a chord shape at a specific position
+   * Generate a basic chord shape algorithmically
    */
-  getChordShape(chord, rootFret, tuning) {
-    const chordNotes = chord.notes.map(n => this.scaleEngine.constructor.getNoteIndex?.(n) ??
-      ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(n));
+  generateBasicShape(chord, rootFret, tuning) {
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const chordNoteIndices = chord.notes.map(n => notes.indexOf(n));
 
     const shape = {
-      name: chord.symbol,
-      startFret: rootFret,
+      name: `${chord.symbol} (${rootFret}fr)`,
+      baseFret: rootFret,
       frets: [],
       fingers: []
     };
 
-    // For each string, find if it contains a chord tone within reasonable reach
+    // For each string, find if it contains a chord tone within reach
     tuning.forEach((openString, stringIndex) => {
-      const openNoteIndex = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(openString);
+      const openNoteIndex = notes.indexOf(openString);
       let found = false;
 
       // Check frets within a 4-fret span from rootFret
       for (let fret = rootFret; fret <= rootFret + 4 && fret <= 15; fret++) {
         const noteIndex = (openNoteIndex + fret) % 12;
-        if (chordNotes.includes(noteIndex)) {
+        if (chordNoteIndices.includes(noteIndex)) {
           shape.frets.push(fret);
           found = true;
           break;
@@ -440,12 +450,17 @@ class GuitarScalesApp {
         </p>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
         ${voicings.map((voicing, index) => this.renderChordDiagram(voicing, index)).join('')}
       </div>
 
-      <div class="text-xs text-gray-500 text-center">
-        Click outside or press ESC to close
+      <div class="text-center">
+        <div class="inline-flex items-center gap-2 text-xs text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>Click a diagram to apply to fretboard | Press ESC to close</span>
+        </div>
       </div>
     `;
 
@@ -462,8 +477,8 @@ class GuitarScalesApp {
     modal.id = 'chord-voicings-modal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4';
     modal.innerHTML = `
-      <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
-        <button id="close-voicings-modal" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+      <div class="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-modal-in">
+        <button id="close-voicings-modal" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10">
           <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -510,75 +525,113 @@ class GuitarScalesApp {
   }
 
   /**
-   * Render a chord diagram
+   * Render an enhanced chord diagram
    */
   renderChordDiagram(voicing, index) {
     const strings = 6;
     const frets = 5;
 
-    // Determine if we need to show a starting fret number
-    const minFret = Math.min(...voicing.frets.filter(f => f > 0));
-    const displayStartFret = minFret > 4 ? minFret : 1;
-    const adjustedFrets = voicing.frets.map(f => f < 0 ? -1 : f - displayStartFret + 1);
+    // Determine display fret number
+    const baseFret = voicing.baseFret || 0;
+    const displayStartFret = baseFret > 0 ? baseFret : 1;
+
+    // Adjust frets for display
+    const adjustedFrets = voicing.frets.map(f => {
+      if (f < 0) return -1; // Muted
+      if (f === 0) return 0; // Open
+      return f - baseFret + 1;
+    });
+
+    // Get shape name if available
+    const shapeName = voicing.name || `Position ${index + 1}`;
+    const isCAGED = shapeName.includes('shape');
 
     return `
-      <div class="border-2 border-gray-300 rounded-lg p-3 bg-gray-50 hover:border-blue-400 transition-colors cursor-pointer" onclick="window.guitarScalesApp.selectVoicing(${index})"
-        <div class="text-center mb-2">
-          <span class="text-sm font-semibold text-gray-700">Position ${index + 1}</span>
-          ${displayStartFret > 1 ? `<span class="text-xs text-gray-500 ml-2">(${displayStartFret}fr)</span>` : ''}
+      <div class="border-2 border-gray-300 rounded-lg p-4 bg-gradient-to-b from-gray-50 to-white hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer" onclick="window.guitarScalesApp.selectVoicing(${index})">
+        <div class="text-center mb-3">
+          <div class="text-sm font-bold text-gray-800">${shapeName}</div>
+          ${displayStartFret > 1 ? `<div class="text-xs text-gray-500 mt-1">Starts at fret ${displayStartFret}</div>` : ''}
         </div>
-        <div class="chord-diagram mx-auto" style="width: 120px;">
-          <svg viewBox="0 0 100 130" class="w-full h-auto">
-            <!-- Fret board -->
-            ${displayStartFret === 1 ? '<rect x="10" y="5" width="80" height="3" fill="#000" />' : ''}
+
+        <div class="chord-diagram mx-auto relative" style="width: 140px;">
+          <svg viewBox="0 0 110 145" class="w-full h-auto">
+            <!-- Nut (thicker line at top for open position) -->
+            ${displayStartFret === 1 ? '<rect x="10" y="10" width="90" height="4" fill="#222" rx="1" />' : ''}
+
+            <!-- Fret position marker (for higher positions) -->
+            ${displayStartFret > 1 ? `<text x="2" y="32" font-size="11" fill="#666" font-weight="bold">${displayStartFret}</text>` : ''}
 
             <!-- Frets -->
             ${Array.from({length: frets}, (_, i) => `
-              <line x1="10" y1="${15 + i * 20}" x2="90" y2="${15 + i * 20}"
-                    stroke="#666" stroke-width="1" />
+              <line x1="10" y1="${20 + i * 22}" x2="100" y2="${20 + i * 22}"
+                    stroke="#888" stroke-width="1.5" />
             `).join('')}
 
-            <!-- Strings -->
+            <!-- Strings (reversed for left-to-right: low E to high E) -->
             ${Array.from({length: strings}, (_, i) => `
-              <line x1="${15 + i * 15}" y1="5" x2="${15 + i * 15}" y2="95"
-                    stroke="#666" stroke-width="${i === 0 || i === strings - 1 ? '2' : '1.5'}" />
+              <line x1="${15 + i * 17}" y1="10" x2="${15 + i * 17}" y2="108"
+                    stroke="#555" stroke-width="${i === 0 || i === strings - 1 ? '2.5' : '2'}"
+                    opacity="0.8" />
             `).join('')}
 
-            <!-- Finger positions -->
+            <!-- Finger positions & numbers -->
             ${adjustedFrets.map((fret, stringIndex) => {
+              const x = 15 + stringIndex * 17;
+
               if (fret < 0) {
                 // Muted string (X)
-                return `<text x="${15 + stringIndex * 15}" y="3"
-                          font-size="10" fill="#f44" text-anchor="middle" font-weight="bold">×</text>`;
+                return `<text x="${x}" y="8" font-size="12" fill="#dc2626" text-anchor="middle" font-weight="bold">×</text>`;
               } else if (fret === 0) {
                 // Open string (O)
-                return `<circle cx="${15 + stringIndex * 15}" cy="0" r="4"
-                          fill="none" stroke="#4CAF50" stroke-width="2" />`;
+                return `<circle cx="${x}" cy="4" r="5" fill="none" stroke="#059669" stroke-width="2.5" />`;
               } else {
                 // Fretted note
-                const y = 5 + (fret * 20) - 10;
-                const isRoot = stringIndex === 0 || (voicing.frets[stringIndex] % 12) === (voicing.frets.find(f => f >= 0) % 12);
-                return `<circle cx="${15 + stringIndex * 15}" cy="${y}" r="5"
-                          fill="${isRoot ? '#2196F3' : '#666'}" stroke="#fff" stroke-width="1" />`;
+                const y = 9 + (fret * 22);
+
+                // Determine if this is a root note
+                const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                const tuning = ['E', 'A', 'D', 'G', 'B', 'E'];
+                const stringNote = (notes.indexOf(tuning[stringIndex]) + voicing.frets[stringIndex]) % 12;
+                const rootNote = voicing.frets.find(f => f >= 0);
+                const rootNoteIndex = rootNote >= 0 ? (notes.indexOf(tuning[voicing.frets.indexOf(rootNote)]) + rootNote) % 12 : -1;
+                const isRoot = stringNote === rootNoteIndex;
+
+                // Get finger number if available
+                const fingerNum = voicing.fingers && voicing.fingers[stringIndex] > 0 ? voicing.fingers[stringIndex] : '';
+
+                return `
+                  <circle cx="${x}" cy="${y}" r="7"
+                          fill="${isRoot ? '#2563EB' : '#475569'}"
+                          stroke="#fff" stroke-width="2" />
+                  ${fingerNum ? `<text x="${x}" y="${y + 4}" font-size="9" fill="#fff" text-anchor="middle" font-weight="bold">${fingerNum}</text>` : ''}
+                `;
               }
             }).join('')}
-
-            <!-- Fret numbers -->
-            ${adjustedFrets.map((fret, stringIndex) =>
-              fret > 0 ? `<text x="${15 + stringIndex * 15}" y="${5 + (fret * 20) - 7}"
-                            font-size="6" fill="#fff" text-anchor="middle" font-weight="bold">${fret}</text>` : ''
-            ).join('')}
           </svg>
 
           <!-- String labels -->
-          <div class="flex justify-between text-xs text-gray-500 mt-1 px-1">
-            <span>E</span>
-            <span>A</span>
-            <span>D</span>
-            <span>G</span>
-            <span>B</span>
-            <span>E</span>
+          <div class="flex justify-between text-xs text-gray-600 mt-2 px-1 font-medium">
+            <span class="opacity-70">E</span>
+            <span class="opacity-70">A</span>
+            <span class="opacity-70">D</span>
+            <span class="opacity-70">G</span>
+            <span class="opacity-70">B</span>
+            <span class="opacity-70">e</span>
           </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="mt-3 flex items-center justify-center gap-3 text-xs">
+          <div class="flex items-center gap-1">
+            <div class="w-3 h-3 rounded-full bg-blue-600"></div>
+            <span class="text-gray-600">Root</span>
+          </div>
+          ${voicing.fingers && voicing.fingers.some(f => f > 0) ? `
+            <div class="flex items-center gap-1">
+              <div class="w-3 h-3 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center" style="font-size: 8px;">1</div>
+              <span class="text-gray-600">Finger</span>
+            </div>
+          ` : ''}
         </div>
       </div>
     `;
