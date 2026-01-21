@@ -147,21 +147,290 @@ class GuitarScalesApp {
         this.updateCurrentProgressionDisplay();
       });
     }
+
+    // Generate progression button
+    const generateButton = document.getElementById('generate-progression');
+    if (generateButton) {
+      generateButton.addEventListener('click', () => {
+        this.generateAutoProgression();
+      });
+    }
+
+    // Analyze progression button
+    const analyzeButton = document.getElementById('analyze-progression');
+    if (analyzeButton) {
+      analyzeButton.addEventListener('click', () => {
+        this.analyzeCurrentProgression();
+      });
+    }
   }
 
   /**
-   * Update progression builder with three layers
+   * Generate automatic progression
+   */
+  generateAutoProgression() {
+    if (!this.currentScale) return;
+
+    // Get parameters from UI
+    const length = parseInt(document.getElementById('progression-length')?.value || '8');
+    const complexity = document.getElementById('progression-complexity')?.value || 'moderate';
+    const style = document.getElementById('progression-style')?.value || 'pop';
+
+    // Generate progression
+    const progression = this.chordEngine.generateProgression(
+      this.currentScale,
+      length,
+      complexity,
+      style
+    );
+
+    // Update current progression
+    this.currentProgression = progression;
+    this.updateCurrentProgressionDisplay();
+
+    // Show toast notification
+    this.showToast(`Generated ${length}-chord ${complexity} ${style} progression`);
+
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate([10, 50, 10]);
+    }
+  }
+
+  /**
+   * Analyze current progression
+   */
+  analyzeCurrentProgression() {
+    if (!this.currentProgression || this.currentProgression.length === 0) {
+      this.showToast('No progression to analyze');
+      return;
+    }
+
+    const analysis = this.chordEngine.analyzeProgression(
+      this.currentProgression,
+      this.currentScale
+    );
+
+    // Create analysis modal
+    this.showAnalysisModal(analysis);
+  }
+
+  /**
+   * Show analysis modal with progression insights
+   */
+  showAnalysisModal(analysis) {
+    // Create or get modal
+    let modal = document.getElementById('analysis-modal');
+    if (!modal) {
+      modal = this.createAnalysisModal();
+    }
+
+    // Build analysis content
+    const content = `
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-gray-900 mb-2">Progression Analysis</h3>
+        <div class="flex items-center gap-4 text-sm text-gray-600">
+          <span>Key: <strong>${analysis.keyCenter}</strong></span>
+          <span>Length: <strong>${analysis.length} chords</strong></span>
+          <span>Complexity: <strong class="capitalize">${analysis.complexity}</strong></span>
+        </div>
+      </div>
+
+      <!-- Features -->
+      ${analysis.features.length > 0 ? `
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 class="text-sm font-bold text-gray-800 mb-2 uppercase tracking-wide">Key Features</h4>
+          <ul class="space-y-1">
+            ${analysis.features.map(feature => `
+              <li class="text-sm text-gray-700 flex items-start">
+                <svg class="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                ${feature}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      <!-- Chord-by-Chord Analysis -->
+      <div class="mb-4">
+        <h4 class="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">Chord-by-Chord Analysis</h4>
+        <div class="space-y-2">
+          ${analysis.chords.map((chord, index) => `
+            <div class="p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-gray-500">${chord.position}.</span>
+                  <span class="text-lg font-bold text-gray-900">${chord.symbol}</span>
+                  <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">${chord.degree}</span>
+                  <span class="text-xs px-2 py-1 ${this.getLayerBadgeColor(chord.layer)} rounded capitalize">${this.getLayerName(chord.layer)}</span>
+                </div>
+                <span class="text-xs text-gray-600">${chord.function}</span>
+              </div>
+              ${chord.transition ? `
+                <div class="text-xs text-gray-500 mt-1">
+                  <span class="font-medium">Voice leading:</span> ${chord.transition.quality}
+                  (${chord.transition.commonTones} common tone${chord.transition.commonTones !== 1 ? 's' : ''})
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3 mt-6">
+        <button onclick="window.guitarScalesApp.saveProgression()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium">
+          Save as Preset
+        </button>
+        <button onclick="window.guitarScalesApp.exportProgression()" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium">
+          Export
+        </button>
+      </div>
+    `;
+
+    const container = modal.querySelector('#analysis-content');
+    container.innerHTML = content;
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  /**
+   * Create analysis modal
+   */
+  createAnalysisModal() {
+    const modal = document.createElement('div');
+    modal.id = 'analysis-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-modal-in">
+        <button id="close-analysis-modal" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors z-10">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <div id="analysis-content">
+          <!-- Content will be populated dynamically -->
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.hideAnalysisModal();
+      }
+    });
+
+    // Close button handler
+    modal.querySelector('#close-analysis-modal').addEventListener('click', () => {
+      this.hideAnalysisModal();
+    });
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        this.hideAnalysisModal();
+      }
+    });
+
+    return modal;
+  }
+
+  /**
+   * Hide analysis modal
+   */
+  hideAnalysisModal() {
+    const modal = document.getElementById('analysis-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  /**
+   * Get color class for layer badge
+   */
+  getLayerBadgeColor(layer) {
+    const colors = {
+      main: 'bg-blue-100 text-blue-800',
+      secondary: 'bg-orange-100 text-orange-800',
+      modal: 'bg-purple-100 text-purple-800',
+      neapolitan: 'bg-green-100 text-green-800',
+      'secondary-dim': 'bg-red-100 text-red-800'
+    };
+    return colors[layer] || 'bg-gray-100 text-gray-800';
+  }
+
+  /**
+   * Get display name for layer
+   */
+  getLayerName(layer) {
+    const names = {
+      main: 'Diatonic',
+      secondary: 'Secondary Dom',
+      modal: 'Modal Int.',
+      neapolitan: 'Neapolitan',
+      'secondary-dim': 'Secondary Dim'
+    };
+    return names[layer] || layer;
+  }
+
+  /**
+   * Save progression as preset (placeholder)
+   */
+  saveProgression() {
+    // TODO: Implement saving to localStorage or database
+    this.showToast('Progression saved!');
+    this.hideAnalysisModal();
+  }
+
+  /**
+   * Export progression (placeholder)
+   */
+  exportProgression() {
+    // Create exportable format
+    const exportData = {
+      key: this.currentScale.root,
+      scale: this.currentScale.name,
+      progression: this.currentProgression.map(chord => ({
+        symbol: chord.symbol,
+        degree: chord.degree,
+        layer: chord.layer
+      }))
+    };
+
+    // Copy to clipboard
+    const json = JSON.stringify(exportData, null, 2);
+    navigator.clipboard.writeText(json).then(() => {
+      this.showToast('Progression copied to clipboard!');
+    }).catch(() => {
+      this.showToast('Export format: ' + json);
+    });
+
+    this.hideAnalysisModal();
+  }
+
+  /**
+   * Update progression builder with all layers
    */
   updateProgressionBuilder() {
     if (!this.currentScale) return;
 
-    // Get all three layers
+    // Get all layers
     this.progressionLayers = this.chordEngine.getProgressionLayers(this.currentScale);
 
     // Update each layer
     this.updateSecondaryDominantsPanel();
     this.updateMainChordsPanel();
     this.updateModalInterchangePanel();
+    this.updateNeapolitanPanel();
+    this.updateSecondaryDiminishedPanel();
     this.updateExampleProgressions();
     this.updateCurrentProgressionDisplay();
   }
@@ -251,6 +520,62 @@ class GuitarScalesApp {
   }
 
   /**
+   * Update Neapolitan chords panel
+   */
+  updateNeapolitanPanel() {
+    const panel = document.getElementById('neapolitan-panel');
+    if (!panel || !this.progressionLayers) return;
+
+    const html = this.progressionLayers.neapolitan.map((chord, index) => `
+      <div class="progression-chord-card bg-white border-2 border-green-300 rounded-lg p-2 hover:border-green-500 hover:shadow-md cursor-pointer transition-all" data-layer="neapolitan" data-index="${index}">
+        <div class="text-center">
+          <div class="text-base font-bold text-gray-900">${chord.symbol}</div>
+          <div class="text-xs text-green-600 mt-1">${chord.degree}</div>
+          <div class="text-xs text-gray-400 mt-1">${chord.root}</div>
+        </div>
+      </div>
+    `).join('');
+
+    panel.innerHTML = html;
+
+    // Add click handlers
+    panel.querySelectorAll('.progression-chord-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        this.handleProgressionChordClick(this.progressionLayers.neapolitan[index], 'neapolitan');
+      });
+    });
+  }
+
+  /**
+   * Update secondary diminished chords panel
+   */
+  updateSecondaryDiminishedPanel() {
+    const panel = document.getElementById('secondary-diminished-panel');
+    if (!panel || !this.progressionLayers) return;
+
+    const html = this.progressionLayers.secondaryDiminished.map((chord, index) => `
+      <div class="progression-chord-card bg-white border-2 border-red-300 rounded-lg p-2 hover:border-red-500 hover:shadow-md cursor-pointer transition-all" data-layer="secondary-dim" data-index="${index}">
+        <div class="text-center">
+          <div class="text-base font-bold text-gray-900">${chord.symbol}</div>
+          <div class="text-xs text-red-600 mt-1">${chord.degree}</div>
+          <div class="text-xs text-gray-400 mt-1">${chord.root}</div>
+        </div>
+      </div>
+    `).join('');
+
+    panel.innerHTML = html;
+
+    // Add click handlers
+    panel.querySelectorAll('.progression-chord-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        this.handleProgressionChordClick(this.progressionLayers.secondaryDiminished[index], 'secondary-dim');
+      });
+    });
+  }
+
+  /**
    * Handle clicking a chord in the progression builder
    */
   handleProgressionChordClick(chord, layer) {
@@ -282,7 +607,9 @@ class GuitarScalesApp {
     const layerColors = {
       secondary: 'bg-orange-100 text-orange-800 border-orange-300',
       main: 'bg-blue-100 text-blue-800 border-blue-300',
-      modal: 'bg-purple-100 text-purple-800 border-purple-300'
+      modal: 'bg-purple-100 text-purple-800 border-purple-300',
+      neapolitan: 'bg-green-100 text-green-800 border-green-300',
+      'secondary-dim': 'bg-red-100 text-red-800 border-red-300'
     };
 
     const html = this.currentProgression.map((chord, index) => `

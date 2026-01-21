@@ -342,7 +342,51 @@
               <button id="clear-progression" class="px-3 py-1 text-sm bg-red-100 text-red-700 hover:bg-red-200 rounded transition-colors">
                 Clear
               </button>
+              <button id="analyze-progression" class="px-3 py-1 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded transition-colors">
+                Analyze
+              </button>
             </div>
+          </div>
+
+          <!-- Progression Generator -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+            <h3 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">Auto-Generate Progression</h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div>
+                <label class="text-xs text-gray-600 block mb-1 font-medium">Length:</label>
+                <select id="progression-length" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <option value="4">4 bars</option>
+                  <option value="8" selected>8 bars</option>
+                  <option value="12">12 bars</option>
+                  <option value="16">16 bars</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-gray-600 block mb-1 font-medium">Complexity:</label>
+                <select id="progression-complexity" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <option value="simple">Simple</option>
+                  <option value="moderate" selected>Moderate</option>
+                  <option value="complex">Complex</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-gray-600 block mb-1 font-medium">Style:</label>
+                <select id="progression-style" class="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                  <option value="pop" selected>Pop</option>
+                  <option value="jazz">Jazz</option>
+                  <option value="classical">Classical</option>
+                  <option value="experimental">Experimental</option>
+                </select>
+              </div>
+            </div>
+
+            <button id="generate-progression" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg">
+              <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Generate Progression
+            </button>
           </div>
 
           <!-- Current Progression Display -->
@@ -392,6 +436,34 @@
             </div>
             <div class="mt-2 text-xs text-gray-600">
               <span class="font-semibold">Flow:</span> Follow the arrows when in non-mixing mode
+            </div>
+          </div>
+
+          <!-- Neapolitan Chords Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg border-2 border-green-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Neapolitan Chords</h3>
+              <span class="ml-2 text-xs text-gray-500">(bII Dark Harmony)</span>
+            </div>
+            <div id="neapolitan-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 gap-2">
+              <!-- Neapolitan chord cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Function:</span> Pre-dominant, typically resolves to V or I
+            </div>
+          </div>
+
+          <!-- Secondary Diminished Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border-2 border-red-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Secondary Diminished</h3>
+              <span class="ml-2 text-xs text-gray-500">(vii°/X Leading Tones)</span>
+            </div>
+            <div id="secondary-diminished-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+              <!-- Secondary diminished cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Function:</span> Leading-tone chords that resolve up by half-step
             </div>
           </div>
 
