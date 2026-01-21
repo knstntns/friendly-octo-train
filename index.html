@@ -235,11 +235,77 @@
           </div>
         </div>
 
-        <!-- Common Progressions Card -->
-        <div class="bg-white rounded-lg shadow-md p-6" id="progressions-section">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Common Chord Progressions</h2>
-          <div id="progressions-panel" class="space-y-3">
-            <!-- Progressions will be populated here -->
+        <!-- Progression Builder Card -->
+        <div class="bg-white rounded-lg shadow-md p-6" id="progression-builder-section">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Progression Builder</h2>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" id="mix-chords-toggle" class="mr-2">
+                <span class="text-sm text-gray-700">Mix Layers</span>
+              </label>
+              <button id="clear-progression" class="px-3 py-1 text-sm bg-red-100 text-red-700 hover:bg-red-200 rounded transition-colors">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Current Progression Display -->
+          <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-gray-200 min-h-[80px]">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">Your Progression:</h3>
+            <div id="current-progression" class="flex flex-wrap gap-2">
+              <span class="text-gray-400 text-sm">Click chords below to build your progression...</span>
+            </div>
+          </div>
+
+          <!-- Secondary Dominants Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-2 border-orange-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Secondary Dominants</h3>
+              <span class="ml-2 text-xs text-gray-500">(Tension → Resolution)</span>
+            </div>
+            <div id="secondary-dominants-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+              <!-- Secondary dominant cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Can go up to any chord, or down from I, IV, and V
+            </div>
+          </div>
+
+          <!-- Main Chords Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Main Chords</h3>
+              <span class="ml-2 text-xs text-gray-500">(Diatonic)</span>
+            </div>
+            <div id="main-chords-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
+              <!-- Main chord cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Can go anywhere when mixing layers
+            </div>
+          </div>
+
+          <!-- Modal Interchange Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Modal Interchange</h3>
+              <span class="ml-2 text-xs text-gray-500">(Borrowed Chords)</span>
+            </div>
+            <div id="modal-interchange-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              <!-- Modal interchange cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Follow the arrows when in non-mixing mode
+            </div>
+          </div>
+
+          <!-- Example Progressions -->
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Example Progressions:</h3>
+            <div id="example-progressions-panel" class="space-y-2">
+              <!-- Example progressions will be populated here -->
+            </div>
           </div>
         </div>
 

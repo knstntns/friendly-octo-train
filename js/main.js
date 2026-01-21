@@ -18,6 +18,11 @@ class GuitarScalesApp {
     this.highlightTimeout = null;
     this.selectedChordCard = null;
 
+    // Progression builder state
+    this.currentProgression = [];
+    this.mixLayersMode = false;
+    this.progressionLayers = null;
+
     this.init();
   }
 
@@ -47,6 +52,9 @@ class GuitarScalesApp {
 
     // Setup show chords toggle
     this.setupShowChordsToggle();
+
+    // Setup progression builder
+    this.setupProgressionBuilder();
 
     // Load initial scale (C Major)
     this.loadScale('C', 'major');
@@ -106,38 +114,244 @@ class GuitarScalesApp {
     this.controlPanel.updateChordPanel(this.currentChords);
     this.controlPanel.updateSeventhChordsPanel(this.currentChords);
 
-    // Update progressions
-    this.updateProgressions();
+    // Update progression builder
+    this.updateProgressionBuilder();
   }
 
   /**
-   * Update common progressions panel
+   * Setup progression builder controls
    */
-  updateProgressions() {
+  setupProgressionBuilder() {
+    // Mix layers toggle
+    const mixToggle = document.getElementById('mix-chords-toggle');
+    if (mixToggle) {
+      mixToggle.addEventListener('change', (e) => {
+        this.mixLayersMode = e.target.checked;
+        this.updateProgressionBuilder();
+      });
+    }
+
+    // Clear progression button
+    const clearButton = document.getElementById('clear-progression');
+    if (clearButton) {
+      clearButton.addEventListener('click', () => {
+        this.currentProgression = [];
+        this.updateCurrentProgressionDisplay();
+      });
+    }
+  }
+
+  /**
+   * Update progression builder with three layers
+   */
+  updateProgressionBuilder() {
     if (!this.currentScale) return;
 
-    const progressionsPanel = document.getElementById('progressions-panel');
-    if (!progressionsPanel) return;
+    // Get all three layers
+    this.progressionLayers = this.chordEngine.getProgressionLayers(this.currentScale);
 
-    const progressions = this.chordEngine.getCommonProgressions(this.currentScale);
+    // Update each layer
+    this.updateSecondaryDominantsPanel();
+    this.updateMainChordsPanel();
+    this.updateModalInterchangePanel();
+    this.updateExampleProgressions();
+    this.updateCurrentProgressionDisplay();
+  }
 
-    const html = progressions.map(progression => `
-      <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-400 cursor-pointer transition-colors">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="font-semibold text-gray-800">${progression.name}</h3>
-          <span class="text-xs text-gray-500">${progression.description}</span>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          ${progression.chords.map(chord => `
-            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-              ${chord.symbol}
-            </span>
-          `).join('')}
+  /**
+   * Update secondary dominants panel
+   */
+  updateSecondaryDominantsPanel() {
+    const panel = document.getElementById('secondary-dominants-panel');
+    if (!panel || !this.progressionLayers) return;
+
+    const html = this.progressionLayers.secondaryDominants.map((chord, index) => `
+      <div class="progression-chord-card bg-white border-2 border-orange-300 rounded-lg p-2 hover:border-orange-500 hover:shadow-md cursor-pointer transition-all" data-layer="secondary" data-index="${index}">
+        <div class="text-center">
+          <div class="text-base font-bold text-gray-900">${chord.symbol}</div>
+          <div class="text-xs text-orange-600 mt-1">${chord.degree}</div>
+          <div class="text-xs text-gray-400 mt-1">${chord.root}</div>
         </div>
       </div>
     `).join('');
 
-    progressionsPanel.innerHTML = html;
+    panel.innerHTML = html;
+
+    // Add click handlers
+    panel.querySelectorAll('.progression-chord-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        this.handleProgressionChordClick(this.progressionLayers.secondaryDominants[index], 'secondary');
+      });
+    });
+  }
+
+  /**
+   * Update main chords panel
+   */
+  updateMainChordsPanel() {
+    const panel = document.getElementById('main-chords-panel');
+    if (!panel || !this.progressionLayers) return;
+
+    const html = this.progressionLayers.mainChords.map((chord, index) => `
+      <div class="progression-chord-card bg-white border-2 border-blue-300 rounded-lg p-2 hover:border-blue-500 hover:shadow-md cursor-pointer transition-all" data-layer="main" data-index="${index}">
+        <div class="text-center">
+          <div class="text-base font-bold text-gray-900">${chord.symbol}</div>
+          <div class="text-xs text-blue-600 mt-1">${chord.degree}</div>
+          <div class="text-xs text-gray-400 mt-1">${chord.quality}</div>
+        </div>
+      </div>
+    `).join('');
+
+    panel.innerHTML = html;
+
+    // Add click handlers
+    panel.querySelectorAll('.progression-chord-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        this.handleProgressionChordClick(this.progressionLayers.mainChords[index], 'main');
+      });
+    });
+  }
+
+  /**
+   * Update modal interchange panel
+   */
+  updateModalInterchangePanel() {
+    const panel = document.getElementById('modal-interchange-panel');
+    if (!panel || !this.progressionLayers) return;
+
+    const html = this.progressionLayers.modalInterchange.map((chord, index) => `
+      <div class="progression-chord-card bg-white border-2 border-purple-300 rounded-lg p-2 hover:border-purple-500 hover:shadow-md cursor-pointer transition-all" data-layer="modal" data-index="${index}">
+        <div class="text-center">
+          <div class="text-base font-bold text-gray-900">${chord.symbol}</div>
+          <div class="text-xs text-purple-600 mt-1">${chord.degree}</div>
+          <div class="text-xs text-gray-400 mt-1">${chord.root}</div>
+        </div>
+      </div>
+    `).join('');
+
+    panel.innerHTML = html;
+
+    // Add click handlers
+    panel.querySelectorAll('.progression-chord-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const index = parseInt(card.dataset.index);
+        this.handleProgressionChordClick(this.progressionLayers.modalInterchange[index], 'modal');
+      });
+    });
+  }
+
+  /**
+   * Handle clicking a chord in the progression builder
+   */
+  handleProgressionChordClick(chord, layer) {
+    // Add chord to progression
+    this.currentProgression.push({
+      ...chord,
+      layer: layer
+    });
+
+    // Update display
+    this.updateCurrentProgressionDisplay();
+
+    // Highlight chord on fretboard
+    this.fretboard.highlightNotes(chord.notes);
+
+    // Auto-clear highlight after 2 seconds
+    if (this.highlightTimeout) {
+      clearTimeout(this.highlightTimeout);
+    }
+    this.highlightTimeout = setTimeout(() => {
+      this.fretboard.resetHighlights();
+    }, 2000);
+  }
+
+  /**
+   * Update current progression display
+   */
+  updateCurrentProgressionDisplay() {
+    const display = document.getElementById('current-progression');
+    if (!display) return;
+
+    if (this.currentProgression.length === 0) {
+      display.innerHTML = '<span class="text-gray-400 text-sm">Click chords below to build your progression...</span>';
+      return;
+    }
+
+    const layerColors = {
+      secondary: 'bg-orange-100 text-orange-800 border-orange-300',
+      main: 'bg-blue-100 text-blue-800 border-blue-300',
+      modal: 'bg-purple-100 text-purple-800 border-purple-300'
+    };
+
+    const html = this.currentProgression.map((chord, index) => `
+      <div class="flex items-center gap-1">
+        <span class="px-3 py-1 ${layerColors[chord.layer]} border rounded-lg text-sm font-medium hover:shadow-md transition-shadow cursor-pointer" data-index="${index}">
+          ${chord.symbol}
+          <span class="text-xs opacity-70 ml-1">${chord.degree}</span>
+        </span>
+        ${index < this.currentProgression.length - 1 ? '<span class="text-gray-400">→</span>' : ''}
+      </div>
+    `).join('');
+
+    display.innerHTML = html;
+
+    // Add click handlers to remove chords
+    display.querySelectorAll('[data-index]').forEach(element => {
+      element.addEventListener('click', () => {
+        const index = parseInt(element.dataset.index);
+        this.currentProgression.splice(index, 1);
+        this.updateCurrentProgressionDisplay();
+      });
+    });
+  }
+
+  /**
+   * Update example progressions
+   */
+  updateExampleProgressions() {
+    if (!this.currentScale) return;
+
+    const panel = document.getElementById('example-progressions-panel');
+    if (!panel) return;
+
+    const examples = [
+      {
+        name: 'Am - F - G - C',
+        description: 'Main chords only',
+        chords: ['vi', 'IV', 'V', 'I']
+      },
+      {
+        name: 'C - C7 - F - G',
+        description: 'Add secondary dominant',
+        chords: ['I', 'V/IV', 'IV', 'V']
+      },
+      {
+        name: 'F - G - B♭ - C',
+        description: 'Add modal interchange',
+        chords: ['IV', 'V', 'bVII', 'I']
+      },
+      {
+        name: 'C - C7 - F - A♭',
+        description: 'Secondary dominant + modal interchange',
+        chords: ['I', 'V/IV', 'IV', 'bVI']
+      }
+    ];
+
+    const html = examples.map(example => `
+      <div class="text-xs border border-gray-200 rounded-lg p-2 hover:border-gray-300 cursor-pointer transition-colors">
+        <div class="flex justify-between items-center">
+          <span class="font-semibold text-gray-800">${example.name}</span>
+          <span class="text-gray-500">${example.description}</span>
+        </div>
+        <div class="mt-1 text-gray-600">
+          ${example.chords.join(' → ')}
+        </div>
+      </div>
+    `).join('');
+
+    panel.innerHTML = html;
   }
 
   /**
