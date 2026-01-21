@@ -197,6 +197,162 @@ export class ChordEngine {
   }
 
   /**
+   * Generate secondary dominants (V/ii, V/iii, V/iv, V/v, V/vi, V/vii)
+   * These are dominant 7th chords that resolve to each scale degree
+   */
+  getSecondaryDominants(scale) {
+    if (!scale || !scale.notes || scale.notes.length < 7) {
+      console.error('Invalid scale for secondary dominants');
+      return [];
+    }
+
+    const secondaryDominants = [];
+    const romanNumerals = ['V/ii', 'V/iii', 'V/iv', 'V/v', 'V/vi', 'V/vii'];
+
+    // For each scale degree except the tonic, create its dominant 7th chord
+    scale.notes.forEach((targetNote, index) => {
+      if (index === 0) return; // Skip tonic (I)
+
+      // The dominant is 7 semitones above the target
+      const dominantRoot = transposeNote(targetNote, 7);
+
+      // Build dominant 7th chord: root, major 3rd (4 semitones), perfect 5th (7 semitones), minor 7th (10 semitones)
+      const notes = [
+        dominantRoot,
+        transposeNote(dominantRoot, 4),  // major 3rd
+        transposeNote(dominantRoot, 7),  // perfect 5th
+        transposeNote(dominantRoot, 10)  // minor 7th
+      ];
+
+      secondaryDominants.push({
+        root: dominantRoot,
+        notes: notes,
+        quality: 'dominant7',
+        symbol: this.getChordSymbol(dominantRoot, 'dominant7'),
+        degree: romanNumerals[index - 1],
+        scaleDegree: index + 1,
+        type: 'secondary-dominant',
+        resolvesTo: targetNote
+      });
+    });
+
+    return secondaryDominants;
+  }
+
+  /**
+   * Generate modal interchange chords (borrowed from parallel minor)
+   * Common borrowed chords: bIII, iv, bVI, bVII, ii°
+   */
+  getModalInterchangeChords(scale) {
+    if (!scale || !scale.root) {
+      console.error('Invalid scale for modal interchange');
+      return [];
+    }
+
+    const root = scale.root;
+    const modalChords = [];
+
+    // bIII - Major chord built on minor 3rd (Eb in C major)
+    const bIII_root = transposeNote(root, 3);
+    modalChords.push({
+      root: bIII_root,
+      notes: [
+        bIII_root,
+        transposeNote(bIII_root, 4),  // major 3rd
+        transposeNote(bIII_root, 7)   // perfect 5th
+      ],
+      quality: 'major',
+      symbol: this.getChordSymbol(bIII_root, 'major') + ' (maj7)',
+      degree: 'bIII',
+      scaleDegree: 3,
+      type: 'modal-interchange',
+      chordExtension: 'maj7'
+    });
+
+    // bVI - Major chord built on minor 6th (Ab in C major)
+    const bVI_root = transposeNote(root, 8);
+    modalChords.push({
+      root: bVI_root,
+      notes: [
+        bVI_root,
+        transposeNote(bVI_root, 4),   // major 3rd
+        transposeNote(bVI_root, 7)    // perfect 5th
+      ],
+      quality: 'major',
+      symbol: this.getChordSymbol(bVI_root, 'major') + ' (maj7)',
+      degree: 'bVI',
+      scaleDegree: 6,
+      type: 'modal-interchange',
+      chordExtension: 'maj7'
+    });
+
+    // iv - Minor chord built on perfect 4th (Fm in C major)
+    const iv_root = transposeNote(root, 5);
+    modalChords.push({
+      root: iv_root,
+      notes: [
+        iv_root,
+        transposeNote(iv_root, 3),    // minor 3rd
+        transposeNote(iv_root, 7)     // perfect 5th
+      ],
+      quality: 'minor',
+      symbol: this.getChordSymbol(iv_root, 'minor') + ' (7)',
+      degree: 'iv',
+      scaleDegree: 4,
+      type: 'modal-interchange',
+      chordExtension: '7'
+    });
+
+    // bVII - Major chord built on minor 7th (Bb in C major)
+    const bVII_root = transposeNote(root, 10);
+    modalChords.push({
+      root: bVII_root,
+      notes: [
+        bVII_root,
+        transposeNote(bVII_root, 4),  // major 3rd
+        transposeNote(bVII_root, 7)   // perfect 5th
+      ],
+      quality: 'major',
+      symbol: this.getChordSymbol(bVII_root, 'major') + ' (7)',
+      degree: 'bVII',
+      scaleDegree: 7,
+      type: 'modal-interchange',
+      chordExtension: '7'
+    });
+
+    // ii° - Diminished chord built on 2nd degree (Ddim in C major)
+    const iiDim_root = transposeNote(root, 2);
+    modalChords.push({
+      root: iiDim_root,
+      notes: [
+        iiDim_root,
+        transposeNote(iiDim_root, 3),  // minor 3rd
+        transposeNote(iiDim_root, 6)   // diminished 5th
+      ],
+      quality: 'diminished',
+      symbol: this.getChordSymbol(iiDim_root, 'diminished') + ' (m7♭5)',
+      degree: 'ii°',
+      scaleDegree: 2,
+      type: 'modal-interchange',
+      chordExtension: 'm7♭5'
+    });
+
+    return modalChords;
+  }
+
+  /**
+   * Get all three layers of chords for progression building
+   * Returns: { mainChords, secondaryDominants, modalInterchange }
+   */
+  getProgressionLayers(scale) {
+    return {
+      mainChords: this.harmonizeTriads(scale),
+      secondaryDominants: this.getSecondaryDominants(scale),
+      modalInterchange: this.getModalInterchangeChords(scale)
+    };
+  }
+
+  /**
    * Get common chord progressions for a scale
    */
   getCommonProgressions(scale) {

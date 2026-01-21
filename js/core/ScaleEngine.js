@@ -172,6 +172,84 @@ export class ScaleEngine {
   }
 
   /**
+   * Get comprehensive scale analysis with chord types, extensions, and modes
+   */
+  getScaleAnalysis(scale = null) {
+    const scaleToUse = scale || this.currentScale;
+    if (!scaleToUse) {
+      console.error('No scale to analyze');
+      return null;
+    }
+
+    // Define chord types for major scale pattern
+    const majorScaleChordTypes = ['Maj7', 'min7', 'min7', 'Maj7', '7', 'min7', 'm7♭5'];
+    const majorScaleExtensions = ['9 11 13', '9 11 13', '♭9 11 ♭13', '9 #11 13', '9 11 13', '9 11 ♭13', '♭9 11 ♭13'];
+    const majorScaleModes = ['Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
+
+    // Map scale types to their chord patterns
+    const chordTypesByScale = {
+      major: majorScaleChordTypes,
+      ionian: majorScaleChordTypes,
+      dorian: ['min7', 'min7', 'Maj7', '7', 'min7', 'm7♭5', 'Maj7'],
+      phrygian: ['min7', 'Maj7', '7', 'min7', 'm7♭5', 'Maj7', 'min7'],
+      lydian: ['Maj7', '7', 'min7', 'm7♭5', 'Maj7', 'min7', 'min7'],
+      mixolydian: ['7', 'min7', 'm7♭5', 'Maj7', 'min7', 'min7', 'Maj7'],
+      aeolian: ['min7', 'm7♭5', 'Maj7', 'min7', 'min7', 'Maj7', '7'],
+      naturalMinor: ['min7', 'm7♭5', 'Maj7', 'min7', 'min7', 'Maj7', '7'],
+      locrian: ['m7♭5', 'Maj7', 'min7', 'min7', 'Maj7', '7', 'min7'],
+      harmonicMinor: ['minMaj7', 'm7♭5', 'Maj7♯5', 'min7', '7', 'Maj7', 'dim7'],
+      melodicMinor: ['minMaj7', 'min7', 'Maj7♯5', '7', '7', 'm7♭5', 'm7♭5']
+    };
+
+    const extensionsByScale = {
+      major: majorScaleExtensions,
+      ionian: majorScaleExtensions,
+      dorian: ['9 11 13', '♭9 11 ♭13', '9 #11 13', '9 11 13', '9 11 ♭13', '♭9 11 ♭13', '9 11 13'],
+      phrygian: ['♭9 11 ♭13', '9 #11 13', '9 11 13', '9 11 ♭13', '♭9 11 ♭13', '9 11 13', '9 11 13'],
+      lydian: ['9 #11 13', '9 11 13', '9 11 ♭13', '♭9 11 ♭13', '9 11 13', '9 11 13', '♭9 11 ♭13'],
+      mixolydian: ['9 11 13', '9 11 ♭13', '♭9 11 ♭13', '9 11 13', '9 11 13', '♭9 11 ♭13', '9 #11 13'],
+      aeolian: ['9 11 ♭13', '♭9 11 ♭13', '9 11 13', '9 11 13', '♭9 11 ♭13', '9 #11 13', '9 11 13'],
+      naturalMinor: ['9 11 ♭13', '♭9 11 ♭13', '9 11 13', '9 11 13', '♭9 11 ♭13', '9 #11 13', '9 11 13'],
+      locrian: ['♭9 11 ♭13', '9 11 13', '9 11 13', '♭9 11 ♭13', '9 #11 13', '9 11 13', '9 11 ♭13']
+    };
+
+    const modesByScale = {
+      major: majorScaleModes,
+      ionian: majorScaleModes,
+      dorian: ['Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian', 'Ionian'],
+      phrygian: ['Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian', 'Ionian', 'Dorian'],
+      lydian: ['Lydian', 'Mixolydian', 'Aeolian', 'Locrian', 'Ionian', 'Dorian', 'Phrygian'],
+      mixolydian: ['Mixolydian', 'Aeolian', 'Locrian', 'Ionian', 'Dorian', 'Phrygian', 'Lydian'],
+      aeolian: ['Aeolian', 'Locrian', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian'],
+      naturalMinor: ['Aeolian', 'Locrian', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian'],
+      locrian: ['Locrian', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian']
+    };
+
+    const chordTypes = chordTypesByScale[scaleToUse.type] || majorScaleChordTypes;
+    const extensions = extensionsByScale[scaleToUse.type] || majorScaleExtensions;
+    const modes = modesByScale[scaleToUse.type] || majorScaleModes;
+
+    const analysis = scaleToUse.notes.map((note, index) => ({
+      degree: scaleToUse.degrees[index],
+      degreeNumeral: this.getScaleDegreeNumeral(index + 1),
+      note: note,
+      chordType: chordTypes[index],
+      extensions: extensions[index],
+      mode: modes[index]
+    }));
+
+    return analysis;
+  }
+
+  /**
+   * Get Roman numeral for scale degree
+   */
+  getScaleDegreeNumeral(degree) {
+    const numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+    return numerals[degree - 1] || '';
+  }
+
+  /**
    * Get the current scale
    */
   getCurrentScale() {

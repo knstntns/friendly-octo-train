@@ -111,9 +111,52 @@
 
         <!-- Scale Info Card -->
         <div class="bg-white rounded-lg shadow-md p-5">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Scale Information</h2>
-          <div id="scale-info" class="text-sm">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Scale Analysis</h2>
+
+          <!-- Scale Basic Info -->
+          <div id="scale-basic-info" class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
             <!-- Populated by JS -->
+          </div>
+
+          <!-- Legend -->
+          <div class="mb-3 flex items-center gap-4 text-xs">
+            <div class="flex items-center gap-1">
+              <div class="w-4 h-4 rounded-full border-2 border-blue-600 bg-white"></div>
+              <span class="text-gray-600">Root note</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <div class="w-4 h-4 rounded-full bg-gray-800"></div>
+              <span class="text-gray-600">Scale tones</span>
+            </div>
+          </div>
+
+          <!-- Scale Degree Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs border-collapse" id="scale-analysis-table">
+              <thead>
+                <tr class="bg-gray-100 border-b-2 border-gray-300">
+                  <th class="p-2 text-left font-bold text-gray-700 uppercase tracking-wide">Degree</th>
+                  <th class="p-2 text-left font-bold text-gray-700 uppercase tracking-wide">Notes</th>
+                  <th class="p-2 text-left font-bold text-gray-700 uppercase tracking-wide">Chord</th>
+                  <th class="p-2 text-left font-bold text-gray-700 uppercase tracking-wide hidden sm:table-cell">Ext.</th>
+                  <th class="p-2 text-left font-bold text-gray-700 uppercase tracking-wide hidden md:table-cell">Mode</th>
+                </tr>
+              </thead>
+              <tbody id="scale-analysis-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Example Usage -->
+          <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Example Usage:</div>
+            <div class="text-xs text-gray-600 space-y-1">
+              <div><span class="font-semibold">1.</span> Select the key</div>
+              <div><span class="font-semibold">2.</span> Choose your scale</div>
+              <div><span class="font-semibold">3.</span> View chords for each degree</div>
+              <div><span class="font-semibold">4.</span> Explore extensions & modes</div>
+            </div>
           </div>
         </div>
 
@@ -193,28 +236,40 @@
             </div>
           </div>
 
-          <!-- Position Legend -->
-          <div class="mt-3 flex flex-wrap gap-2 items-center text-xs">
-            <span class="text-gray-500 font-medium">Positions:</span>
-            <div class="position-legend">
-              <span class="position-legend-dot" style="background: #10B981;"></span>
-              <span class="text-gray-700">I (0-4)</span>
+          <!-- Position & Note Legend -->
+          <div class="mt-3 space-y-2">
+            <!-- Note Type Legend (Primary) -->
+            <div class="flex flex-wrap gap-3 items-center text-xs p-2 bg-gray-50 rounded-lg border border-gray-200">
+              <span class="text-gray-600 font-bold uppercase tracking-wide">Legend:</span>
+              <div class="flex items-center gap-1">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full border-2 border-blue-600 bg-white text-blue-600 font-bold text-xs">•</span>
+                <span class="text-gray-800 font-medium">Root note</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-800 text-white text-xs">•</span>
+                <span class="text-gray-800 font-medium">Scale tones</span>
+              </div>
             </div>
-            <div class="position-legend">
-              <span class="position-legend-dot" style="background: #3B82F6;"></span>
-              <span class="text-gray-700">II (5-9)</span>
-            </div>
-            <div class="position-legend">
-              <span class="position-legend-dot" style="background: #8B5CF6;"></span>
-              <span class="text-gray-700">III (10-14)</span>
-            </div>
-            <div class="position-legend">
-              <span class="position-legend-dot" style="background: #EC4899;"></span>
-              <span class="text-gray-700">IV (15+)</span>
-            </div>
-            <div class="position-legend">
-              <span class="position-legend-dot" style="background: #FF6B6B;"></span>
-              <span class="text-gray-700">Root</span>
+
+            <!-- Position Colors (Secondary) -->
+            <div class="flex flex-wrap gap-2 items-center text-xs">
+              <span class="text-gray-500 font-medium">Positions:</span>
+              <div class="position-legend">
+                <span class="position-legend-dot" style="background: #10B981;"></span>
+                <span class="text-gray-700">I (0-4)</span>
+              </div>
+              <div class="position-legend">
+                <span class="position-legend-dot" style="background: #3B82F6;"></span>
+                <span class="text-gray-700">II (5-9)</span>
+              </div>
+              <div class="position-legend">
+                <span class="position-legend-dot" style="background: #8B5CF6;"></span>
+                <span class="text-gray-700">III (10-14)</span>
+              </div>
+              <div class="position-legend">
+                <span class="position-legend-dot" style="background: #EC4899;"></span>
+                <span class="text-gray-700">IV (15+)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -235,11 +290,77 @@
           </div>
         </div>
 
-        <!-- Common Progressions Card -->
-        <div class="bg-white rounded-lg shadow-md p-6" id="progressions-section">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Common Chord Progressions</h2>
-          <div id="progressions-panel" class="space-y-3">
-            <!-- Progressions will be populated here -->
+        <!-- Progression Builder Card -->
+        <div class="bg-white rounded-lg shadow-md p-6" id="progression-builder-section">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Progression Builder</h2>
+            <div class="flex items-center gap-3">
+              <label class="flex items-center cursor-pointer">
+                <input type="checkbox" id="mix-chords-toggle" class="mr-2">
+                <span class="text-sm text-gray-700">Mix Layers</span>
+              </label>
+              <button id="clear-progression" class="px-3 py-1 text-sm bg-red-100 text-red-700 hover:bg-red-200 rounded transition-colors">
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <!-- Current Progression Display -->
+          <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-gray-200 min-h-[80px]">
+            <h3 class="text-sm font-semibold text-gray-700 mb-2">Your Progression:</h3>
+            <div id="current-progression" class="flex flex-wrap gap-2">
+              <span class="text-gray-400 text-sm">Click chords below to build your progression...</span>
+            </div>
+          </div>
+
+          <!-- Secondary Dominants Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border-2 border-orange-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Secondary Dominants</h3>
+              <span class="ml-2 text-xs text-gray-500">(Tension → Resolution)</span>
+            </div>
+            <div id="secondary-dominants-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+              <!-- Secondary dominant cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Can go up to any chord, or down from I, IV, and V
+            </div>
+          </div>
+
+          <!-- Main Chords Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Main Chords</h3>
+              <span class="ml-2 text-xs text-gray-500">(Diatonic)</span>
+            </div>
+            <div id="main-chords-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-2">
+              <!-- Main chord cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Can go anywhere when mixing layers
+            </div>
+          </div>
+
+          <!-- Modal Interchange Layer -->
+          <div class="mb-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border-2 border-purple-200">
+            <div class="flex items-center mb-3">
+              <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide">Modal Interchange</h3>
+              <span class="ml-2 text-xs text-gray-500">(Borrowed Chords)</span>
+            </div>
+            <div id="modal-interchange-panel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+              <!-- Modal interchange cards will be populated here -->
+            </div>
+            <div class="mt-2 text-xs text-gray-600">
+              <span class="font-semibold">Flow:</span> Follow the arrows when in non-mixing mode
+            </div>
+          </div>
+
+          <!-- Example Progressions -->
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Example Progressions:</h3>
+            <div id="example-progressions-panel" class="space-y-2">
+              <!-- Example progressions will be populated here -->
+            </div>
           </div>
         </div>
 

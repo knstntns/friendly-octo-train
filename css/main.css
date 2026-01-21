@@ -45,6 +45,76 @@ body {
   transform: translateY(0);
 }
 
+/* Progression builder chord cards */
+.progression-chord-card {
+  transition: all 0.2s ease;
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progression-chord-card:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.progression-chord-card:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Scale Analysis Table */
+#scale-analysis-table {
+  border: 1px solid #E5E7EB;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+#scale-analysis-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+#scale-analysis-table tbody tr {
+  cursor: pointer;
+}
+
+#scale-analysis-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Root note indicator in table */
+.scale-note-root {
+  border: 2px solid #2563EB;
+  background: white;
+  color: #2563EB;
+  font-weight: 700;
+}
+
+.scale-note-regular {
+  background: #1F2937;
+  color: white;
+}
+
+/* Position Legend */
+.position-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.375rem;
+}
+
+.position-legend-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 /* Custom select styling */
 select {
   appearance: none;
