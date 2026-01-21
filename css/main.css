@@ -115,6 +115,42 @@ body {
   display: inline-block;
 }
 
+/* Tab Navigation */
+.tab-button {
+  color: #6B7280;
+  background: white;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-button:hover {
+  color: #1F2937;
+  background: #F9FAFB;
+}
+
+.tab-button.active {
+  color: #2563EB;
+  background: #EFF6FF;
+  border-bottom-color: #2563EB;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Chord Voicings Modal */
+#chord-voicings-modal .chord-diagram {
+  user-select: none;
+}
+
+/* Toast Notification */
+#toast-notification {
+  transition: opacity 0.3s ease;
+}
+
 /* Custom select styling */
 select {
   appearance: none;

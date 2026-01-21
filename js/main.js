@@ -23,6 +23,10 @@ class GuitarScalesApp {
     this.mixLayersMode = false;
     this.progressionLayers = null;
 
+    // Chord voicing state
+    this.currentlyDisplayedChord = null;
+    this.chordVoicingsModal = null;
+
     this.init();
   }
 
@@ -258,16 +262,8 @@ class GuitarScalesApp {
     // Update display
     this.updateCurrentProgressionDisplay();
 
-    // Highlight chord on fretboard
-    this.fretboard.highlightNotes(chord.notes);
-
-    // Auto-clear highlight after 2 seconds
-    if (this.highlightTimeout) {
-      clearTimeout(this.highlightTimeout);
-    }
-    this.highlightTimeout = setTimeout(() => {
-      this.fretboard.resetHighlights();
-    }, 2000);
+    // Show chord voicing options
+    this.showChordVoicings(chord);
   }
 
   /**
@@ -355,6 +351,279 @@ class GuitarScalesApp {
     `).join('');
 
     panel.innerHTML = html;
+  }
+
+  /**
+   * Generate chord voicings for display
+   * Returns common chord shapes on the guitar
+   */
+  generateChordVoicings(chord) {
+    const voicings = [];
+    const tuning = ['E', 'A', 'D', 'G', 'B', 'E'];
+
+    // Define common chord shape patterns (root position, 1st inversion, etc.)
+    // These are relative positions for major, minor, and 7th chords
+
+    // For simplicity, generate 3-4 common positions across the fretboard
+    const positions = [0, 3, 5, 7, 10, 12]; // Common root positions
+
+    positions.forEach(startFret => {
+      const shape = this.getChordShape(chord, startFret, tuning);
+      if (shape && shape.frets.some(f => f >= 0)) {
+        voicings.push(shape);
+      }
+    });
+
+    return voicings.slice(0, 4); // Return up to 4 voicings
+  }
+
+  /**
+   * Get a chord shape at a specific position
+   */
+  getChordShape(chord, rootFret, tuning) {
+    const chordNotes = chord.notes.map(n => this.scaleEngine.constructor.getNoteIndex?.(n) ??
+      ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(n));
+
+    const shape = {
+      name: chord.symbol,
+      startFret: rootFret,
+      frets: [],
+      fingers: []
+    };
+
+    // For each string, find if it contains a chord tone within reasonable reach
+    tuning.forEach((openString, stringIndex) => {
+      const openNoteIndex = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].indexOf(openString);
+      let found = false;
+
+      // Check frets within a 4-fret span from rootFret
+      for (let fret = rootFret; fret <= rootFret + 4 && fret <= 15; fret++) {
+        const noteIndex = (openNoteIndex + fret) % 12;
+        if (chordNotes.includes(noteIndex)) {
+          shape.frets.push(fret);
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        shape.frets.push(-1); // Muted string
+      }
+    });
+
+    return shape;
+  }
+
+  /**
+   * Show chord voicings modal
+   */
+  showChordVoicings(chord) {
+    this.currentlyDisplayedChord = chord;
+
+    // Get or create modal
+    let modal = document.getElementById('chord-voicings-modal');
+    if (!modal) {
+      modal = this.createChordVoicingsModal();
+    }
+
+    // Generate voicings
+    const voicings = this.generateChordVoicings(chord);
+
+    // Update modal content
+    const voicingsContainer = modal.querySelector('#chord-voicings-container');
+    voicingsContainer.innerHTML = `
+      <div class="mb-4">
+        <h3 class="text-2xl font-bold text-gray-900 mb-1">${chord.symbol}</h3>
+        <p class="text-sm text-gray-600">
+          ${chord.degree ? `Degree: ${chord.degree} | ` : ''}
+          Notes: ${chord.notes.join(', ')}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mb-4">
+        ${voicings.map((voicing, index) => this.renderChordDiagram(voicing, index)).join('')}
+      </div>
+
+      <div class="text-xs text-gray-500 text-center">
+        Click outside or press ESC to close
+      </div>
+    `;
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  /**
+   * Create chord voicings modal
+   */
+  createChordVoicingsModal() {
+    const modal = document.createElement('div');
+    modal.id = 'chord-voicings-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4';
+    modal.innerHTML = `
+      <div class="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+        <button id="close-voicings-modal" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <div id="chord-voicings-container">
+          <!-- Content will be populated dynamically -->
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Close on background click
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.hideChordVoicings();
+      }
+    });
+
+    // Close button handler
+    modal.querySelector('#close-voicings-modal').addEventListener('click', () => {
+      this.hideChordVoicings();
+    });
+
+    // Close on ESC key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        this.hideChordVoicings();
+      }
+    });
+
+    return modal;
+  }
+
+  /**
+   * Hide chord voicings modal
+   */
+  hideChordVoicings() {
+    const modal = document.getElementById('chord-voicings-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  /**
+   * Render a chord diagram
+   */
+  renderChordDiagram(voicing, index) {
+    const strings = 6;
+    const frets = 5;
+
+    // Determine if we need to show a starting fret number
+    const minFret = Math.min(...voicing.frets.filter(f => f > 0));
+    const displayStartFret = minFret > 4 ? minFret : 1;
+    const adjustedFrets = voicing.frets.map(f => f < 0 ? -1 : f - displayStartFret + 1);
+
+    return `
+      <div class="border-2 border-gray-300 rounded-lg p-3 bg-gray-50 hover:border-blue-400 transition-colors cursor-pointer" onclick="window.guitarScalesApp.selectVoicing(${index})"
+        <div class="text-center mb-2">
+          <span class="text-sm font-semibold text-gray-700">Position ${index + 1}</span>
+          ${displayStartFret > 1 ? `<span class="text-xs text-gray-500 ml-2">(${displayStartFret}fr)</span>` : ''}
+        </div>
+        <div class="chord-diagram mx-auto" style="width: 120px;">
+          <svg viewBox="0 0 100 130" class="w-full h-auto">
+            <!-- Fret board -->
+            ${displayStartFret === 1 ? '<rect x="10" y="5" width="80" height="3" fill="#000" />' : ''}
+
+            <!-- Frets -->
+            ${Array.from({length: frets}, (_, i) => `
+              <line x1="10" y1="${15 + i * 20}" x2="90" y2="${15 + i * 20}"
+                    stroke="#666" stroke-width="1" />
+            `).join('')}
+
+            <!-- Strings -->
+            ${Array.from({length: strings}, (_, i) => `
+              <line x1="${15 + i * 15}" y1="5" x2="${15 + i * 15}" y2="95"
+                    stroke="#666" stroke-width="${i === 0 || i === strings - 1 ? '2' : '1.5'}" />
+            `).join('')}
+
+            <!-- Finger positions -->
+            ${adjustedFrets.map((fret, stringIndex) => {
+              if (fret < 0) {
+                // Muted string (X)
+                return `<text x="${15 + stringIndex * 15}" y="3"
+                          font-size="10" fill="#f44" text-anchor="middle" font-weight="bold">×</text>`;
+              } else if (fret === 0) {
+                // Open string (O)
+                return `<circle cx="${15 + stringIndex * 15}" cy="0" r="4"
+                          fill="none" stroke="#4CAF50" stroke-width="2" />`;
+              } else {
+                // Fretted note
+                const y = 5 + (fret * 20) - 10;
+                const isRoot = stringIndex === 0 || (voicing.frets[stringIndex] % 12) === (voicing.frets.find(f => f >= 0) % 12);
+                return `<circle cx="${15 + stringIndex * 15}" cy="${y}" r="5"
+                          fill="${isRoot ? '#2196F3' : '#666'}" stroke="#fff" stroke-width="1" />`;
+              }
+            }).join('')}
+
+            <!-- Fret numbers -->
+            ${adjustedFrets.map((fret, stringIndex) =>
+              fret > 0 ? `<text x="${15 + stringIndex * 15}" y="${5 + (fret * 20) - 7}"
+                            font-size="6" fill="#fff" text-anchor="middle" font-weight="bold">${fret}</text>` : ''
+            ).join('')}
+          </svg>
+
+          <!-- String labels -->
+          <div class="flex justify-between text-xs text-gray-500 mt-1 px-1">
+            <span>E</span>
+            <span>A</span>
+            <span>D</span>
+            <span>G</span>
+            <span>B</span>
+            <span>E</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Select a chord voicing and highlight it on the main fretboard
+   */
+  selectVoicing(voicingIndex) {
+    const chord = this.currentlyDisplayedChord;
+    if (!chord) return;
+
+    const voicings = this.generateChordVoicings(chord);
+    const selectedVoicing = voicings[voicingIndex];
+
+    if (selectedVoicing) {
+      // Highlight the specific voicing on the main fretboard
+      this.fretboard.highlightNotes(chord.notes);
+
+      // Close modal
+      this.hideChordVoicings();
+
+      // Show a toast notification
+      this.showToast(`Selected ${chord.symbol} - Position ${voicingIndex + 1}`);
+    }
+  }
+
+  /**
+   * Show a toast notification
+   */
+  showToast(message) {
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'toast-notification';
+      toast.className = 'fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300';
+      document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.style.opacity = '1';
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+    }, 2000);
   }
 
   /**
@@ -453,20 +722,8 @@ class GuitarScalesApp {
       }
     }
 
-    // Reset highlights after 4 seconds (longer on mobile for better UX)
-    const timeout = window.innerWidth < 768 ? 4000 : 3000;
-    this.highlightTimeout = setTimeout(() => {
-      this.fretboard.resetHighlights();
-
-      // Remove selection styling
-      if (this.selectedChordCard) {
-        this.selectedChordCard.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50', 'selected');
-        this.selectedChordCard.classList.add('border-gray-200');
-        this.selectedChordCard = null;
-      }
-
-      this.highlightTimeout = null;
-    }, timeout);
+    // Show chord voicing options overlay
+    this.showChordVoicings(chord);
   }
 
   /**
@@ -552,9 +809,54 @@ window.addEventListener('beforeunload', () => {
 });
 
 /**
+ * Initialize tab navigation
+ */
+function initializeTabNavigation() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.getAttribute('data-tab');
+
+      // Remove active class from all buttons and contents
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      // Add active class to clicked button and corresponding content
+      button.classList.add('active');
+      const targetContent = document.querySelector(`[data-tab-content="${targetTab}"]`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+      }
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+
+      // Save tab preference
+      localStorage.setItem('activeTab', targetTab);
+    });
+  });
+
+  // Restore last active tab
+  const lastActiveTab = localStorage.getItem('activeTab');
+  if (lastActiveTab) {
+    const button = document.querySelector(`[data-tab="${lastActiveTab}"]`);
+    if (button) {
+      button.click();
+    }
+  }
+}
+
+/**
  * Initialize UX enhancements (mobile menu, zoom, keyboard shortcuts)
  */
 function initializeUXEnhancements() {
+  // Initialize tab navigation
+  initializeTabNavigation();
+
   // Mobile menu toggle
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
   const controlPanel = document.getElementById('control-panel');

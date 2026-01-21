@@ -165,6 +165,38 @@
       <!-- Main Content Area (Fretboard & Chords) -->
       <section class="lg:col-span-3 space-y-6">
 
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+          <div class="flex border-b border-gray-200" role="tablist">
+            <button class="tab-button active flex-1 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" data-tab="scales" role="tab">
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+                </svg>
+                <span>Scales & Fretboard</span>
+              </div>
+            </button>
+            <button class="tab-button flex-1 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" data-tab="chords" role="tab">
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Harmonized Chords</span>
+              </div>
+            </button>
+            <button class="tab-button flex-1 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" data-tab="progressions" role="tab">
+              <div class="flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>Progressions</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tab Content: Scales -->
+        <div class="tab-content active" data-tab-content="scales">
         <!-- Fretboard Card -->
         <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
           <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
@@ -273,7 +305,11 @@
             </div>
           </div>
         </div>
+        </div>
+        <!-- End Tab Content: Scales -->
 
+        <!-- Tab Content: Chords -->
+        <div class="tab-content" data-tab-content="chords">
         <!-- Triads Card -->
         <div class="bg-white rounded-lg shadow-md p-6" id="triads-section">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">Harmonized Triads</h2>
@@ -289,7 +325,11 @@
             <!-- Seventh chord cards will be populated here -->
           </div>
         </div>
+        </div>
+        <!-- End Tab Content: Chords -->
 
+        <!-- Tab Content: Progressions -->
+        <div class="tab-content" data-tab-content="progressions">
         <!-- Progression Builder Card -->
         <div class="bg-white rounded-lg shadow-md p-6" id="progression-builder-section">
           <div class="flex justify-between items-center mb-4">
@@ -363,6 +403,8 @@
             </div>
           </div>
         </div>
+        </div>
+        <!-- End Tab Content: Progressions -->
 
       </section>
 
