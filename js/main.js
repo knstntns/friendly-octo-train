@@ -737,7 +737,7 @@ class GuitarScalesApp {
     const chordNoteIndices = chord.notes.map(n => notes.indexOf(n));
 
     const shape = {
-      name: `${chord.symbol} (${rootFret}fr)`,
+      name: rootFret === 0 ? `${chord.symbol} Open` : `${chord.symbol} (${rootFret}fr)`,
       baseFret: rootFret,
       frets: [],
       fingers: []
@@ -887,11 +887,13 @@ class GuitarScalesApp {
     // Get shape name if available
     const shapeName = voicing.name || `Position ${index + 1}`;
     const isCAGED = shapeName.includes('shape');
+    const isOpenPosition = baseFret === 0 || displayStartFret === 1;
 
     return `
       <div class="border-2 border-gray-300 rounded-lg p-4 bg-gradient-to-b from-gray-50 to-white hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer" onclick="window.guitarScalesApp.selectVoicing(${index})">
         <div class="text-center mb-3">
           <div class="text-sm font-bold text-gray-800">${shapeName}</div>
+          ${isCAGED && isOpenPosition ? `<div class="text-xs text-green-600 font-semibold mt-1">Open Position</div>` : ''}
           ${displayStartFret > 1 ? `<div class="text-xs text-gray-500 mt-1">Starts at fret ${displayStartFret}</div>` : ''}
         </div>
 
