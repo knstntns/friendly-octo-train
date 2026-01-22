@@ -169,31 +169,46 @@ class GuitarScalesApp {
    * Generate automatic progression
    */
   generateAutoProgression() {
-    if (!this.currentScale) return;
+    console.log('Generate progression called');
+
+    if (!this.currentScale) {
+      console.error('No current scale available');
+      this.showToast('Please select a scale first');
+      return;
+    }
 
     // Get parameters from UI
     const length = parseInt(document.getElementById('progression-length')?.value || '8');
     const complexity = document.getElementById('progression-complexity')?.value || 'moderate';
     const style = document.getElementById('progression-style')?.value || 'pop';
 
-    // Generate progression
-    const progression = this.chordEngine.generateProgression(
-      this.currentScale,
-      length,
-      complexity,
-      style
-    );
+    console.log('Generation parameters:', { length, complexity, style });
 
-    // Update current progression
-    this.currentProgression = progression;
-    this.updateCurrentProgressionDisplay();
+    try {
+      // Generate progression
+      const progression = this.chordEngine.generateProgression(
+        this.currentScale,
+        length,
+        complexity,
+        style
+      );
 
-    // Show toast notification
-    this.showToast(`Generated ${length}-chord ${complexity} ${style} progression`);
+      console.log('Generated progression:', progression);
 
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate([10, 50, 10]);
+      // Update current progression
+      this.currentProgression = progression;
+      this.updateCurrentProgressionDisplay();
+
+      // Show toast notification
+      this.showToast(`Generated ${length}-chord ${complexity} ${style} progression`);
+
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate([10, 50, 10]);
+      }
+    } catch (error) {
+      console.error('Error generating progression:', error);
+      this.showToast('Error generating progression: ' + error.message);
     }
   }
 
