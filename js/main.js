@@ -6,6 +6,7 @@ import { FretboardRenderer } from './ui/FretboardRenderer.js';
 import { ControlPanel } from './ui/ControlPanel.js';
 import { TUNINGS } from './data/constants.js';
 import { getChordVoicings } from './data/chordShapes.js';
+import { getAudioEngine } from './core/AudioEngine.js';
 
 class GuitarScalesApp {
   constructor() {
@@ -27,6 +28,12 @@ class GuitarScalesApp {
     // Chord voicing state
     this.currentlyDisplayedChord = null;
     this.chordVoicingsModal = null;
+
+    // Audio engine for chord playback
+    this.audioEngine = getAudioEngine();
+    this.isPlayingProgression = false;
+    this.stopProgressionFn = null;
+    this.playingChordIndex = -1;
 
     this.init();
   }
@@ -616,6 +623,7 @@ class GuitarScalesApp {
 
     if (this.currentProgression.length === 0) {
       display.innerHTML = '<span class="text-gray-400 text-sm">Click chords below to build your progression...</span>';
+      this.updatePlayAllButton();
       return;
     }
 
@@ -628,25 +636,186 @@ class GuitarScalesApp {
     };
 
     const html = this.currentProgression.map((chord, index) => `
-      <div class="flex items-center gap-1">
-        <span class="px-3 py-1 ${layerColors[chord.layer]} border rounded-lg text-sm font-medium hover:shadow-md transition-shadow cursor-pointer" data-index="${index}">
-          ${chord.symbol}
-          <span class="text-xs opacity-70 ml-1">${chord.degree}</span>
-        </span>
-        ${index < this.currentProgression.length - 1 ? '<span class="text-gray-400">→</span>' : ''}
+      <div class="flex items-center gap-1 progression-chord-item" data-chord-index="${index}">
+        <div class="relative group">
+          <span class="chord-badge px-3 py-1 ${layerColors[chord.layer]} border rounded-lg text-sm font-medium hover:shadow-md transition-all cursor-pointer ${this.playingChordIndex === index ? 'ring-2 ring-indigo-500 scale-110' : ''}" data-index="${index}">
+            ${chord.symbol}
+            <span class="text-xs opacity-70 ml-1">${chord.degree}</span>
+          </span>
+        </div>
+        ${index < this.currentProgression.length - 1 ? '<span class="text-gray-400 mx-1">→</span>' : ''}
       </div>
     `).join('');
 
     display.innerHTML = html;
 
-    // Add click handlers to remove chords
-    display.querySelectorAll('[data-index]').forEach(element => {
-      element.addEventListener('click', () => {
+    // Add click handlers - single click to play, double click to remove
+    display.querySelectorAll('.chord-badge').forEach(element => {
+      // Single click to play chord
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const index = parseInt(element.dataset.index);
+        this.playSingleChord(index);
+      });
+
+      // Double click to remove chord
+      element.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
         const index = parseInt(element.dataset.index);
         this.currentProgression.splice(index, 1);
         this.updateCurrentProgressionDisplay();
       });
     });
+
+    this.updatePlayAllButton();
+  }
+
+  /**
+   * Play a single chord from the progression
+   */
+  playSingleChord(index) {
+    const chord = this.currentProgression[index];
+    if (!chord || !chord.notes) return;
+
+    // Visual feedback
+    this.highlightPlayingChord(index);
+
+    // Play the chord
+    this.audioEngine.playChord(chord.notes, {
+      arpeggio: false,
+      duration: 1.5,
+      baseOctave: 3
+    });
+
+    // Highlight chord notes on fretboard
+    if (chord.notes) {
+      this.fretboard.highlightNotes(chord.notes);
+    }
+
+    // Clear highlight after chord plays
+    setTimeout(() => {
+      if (this.playingChordIndex === index) {
+        this.playingChordIndex = -1;
+        this.updateChordHighlight();
+        this.fretboard.resetHighlights();
+      }
+    }, 1500);
+  }
+
+  /**
+   * Highlight the currently playing chord
+   */
+  highlightPlayingChord(index) {
+    this.playingChordIndex = index;
+    this.updateChordHighlight();
+  }
+
+  /**
+   * Update chord highlight visuals
+   */
+  updateChordHighlight() {
+    const display = document.getElementById('current-progression');
+    if (!display) return;
+
+    display.querySelectorAll('.chord-badge').forEach((badge, i) => {
+      if (i === this.playingChordIndex) {
+        badge.classList.add('ring-2', 'ring-indigo-500', 'scale-110');
+      } else {
+        badge.classList.remove('ring-2', 'ring-indigo-500', 'scale-110');
+      }
+    });
+  }
+
+  /**
+   * Update the Play All button state
+   */
+  updatePlayAllButton() {
+    let playAllBtn = document.getElementById('play-progression-btn');
+
+    // Create button if it doesn't exist
+    if (!playAllBtn) {
+      const clearBtn = document.getElementById('clear-progression');
+      if (clearBtn && clearBtn.parentElement) {
+        playAllBtn = document.createElement('button');
+        playAllBtn.id = 'play-progression-btn';
+        playAllBtn.className = 'bg-green-500 hover:bg-green-600 text-white text-xs font-medium py-1.5 px-3 rounded-lg transition-colors shadow flex items-center gap-1';
+        playAllBtn.innerHTML = '<span>▶</span><span>Play</span>';
+        playAllBtn.addEventListener('click', () => this.playEntireProgression());
+        clearBtn.parentElement.insertBefore(playAllBtn, clearBtn);
+      }
+    }
+
+    if (playAllBtn) {
+      if (this.currentProgression.length === 0) {
+        playAllBtn.disabled = true;
+        playAllBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        playAllBtn.disabled = false;
+        playAllBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+
+      // Update button state based on playing status
+      if (this.isPlayingProgression) {
+        playAllBtn.innerHTML = '<span>⏹</span><span>Stop</span>';
+        playAllBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+        playAllBtn.classList.add('bg-red-500', 'hover:bg-red-600');
+      } else {
+        playAllBtn.innerHTML = '<span>▶</span><span>Play</span>';
+        playAllBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+        playAllBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+      }
+    }
+  }
+
+  /**
+   * Play the entire chord progression
+   */
+  playEntireProgression() {
+    if (this.isPlayingProgression) {
+      this.stopProgression();
+      return;
+    }
+
+    if (this.currentProgression.length === 0) return;
+
+    this.isPlayingProgression = true;
+    this.updatePlayAllButton();
+
+    const tempo = 90; // BPM
+
+    this.stopProgressionFn = this.audioEngine.playProgression(this.currentProgression, {
+      tempo,
+      beatsPerChord: 2,
+      arpeggio: false,
+      onChordStart: (index, chord) => {
+        this.highlightPlayingChord(index);
+        if (chord.notes) {
+          this.fretboard.highlightNotes(chord.notes);
+        }
+      },
+      onComplete: () => {
+        this.isPlayingProgression = false;
+        this.playingChordIndex = -1;
+        this.updateChordHighlight();
+        this.updatePlayAllButton();
+        this.fretboard.resetHighlights();
+      }
+    });
+  }
+
+  /**
+   * Stop the currently playing progression
+   */
+  stopProgression() {
+    if (this.stopProgressionFn) {
+      this.stopProgressionFn();
+      this.stopProgressionFn = null;
+    }
+    this.isPlayingProgression = false;
+    this.playingChordIndex = -1;
+    this.updateChordHighlight();
+    this.updatePlayAllButton();
+    this.fretboard.resetHighlights();
   }
 
   /**
@@ -1036,6 +1205,8 @@ class GuitarScalesApp {
    */
   handleKeyChange(data) {
     console.log('Key changed:', data);
+    // Clear current progression when key changes since chords are now in a different key
+    this.currentProgression = [];
     this.loadScale(data.key, data.scale);
   }
 
@@ -1135,7 +1306,7 @@ class GuitarScalesApp {
 
       const triadsSection = document.getElementById('triads-section');
       const seventhsSection = document.getElementById('sevenths-section');
-      const progressionsSection = document.getElementById('progressions-section');
+      const progressionsSection = document.getElementById('progression-builder-section');
 
       if (this.showChords) {
         triadsSection.style.display = 'block';

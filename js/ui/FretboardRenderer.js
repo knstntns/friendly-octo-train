@@ -29,6 +29,7 @@ export class FretboardRenderer {
       displayMode: options.displayMode || 'notes', // 'notes', 'degrees', 'intervals'
       tuning: options.tuning || TUNINGS.standard,
       showFretNumbers: options.showFretNumbers !== false,
+      enableAudio: options.enableAudio !== false,
       ...options
     };
 
@@ -43,9 +44,25 @@ export class FretboardRenderer {
     this.touchStartX = 0;
     this.touchStartY = 0;
 
+    // Audio engine
+    this.audioContext = null;
+    this.audioEnabled = this.options.enableAudio;
+
+    // Tooltip element
+    this.tooltip = null;
+
+    // Focused note index for keyboard navigation
+    this.focusedNoteIndex = -1;
+
     this.init();
     this.setupTouchGestures();
     this.setupResponsiveResize();
+    this.setupMouseWheelZoom();
+    this.setupKeyboardNavigation();
+    this.initAudio();
+    this.createTooltip();
+    this.createZoomControls();
+    this.createLegend();
   }
 
   /**
@@ -237,8 +254,11 @@ export class FretboardRenderer {
     const stringHeight = (this.options.numStrings - 1) * this.options.stringSpacing;
     const y = margin + stringHeight + 20;
 
-    for (let fret = 0; fret <= this.options.numFrets; fret += 3) {
-      if (fret === 0) continue;
+    // Standard guitar fret marker positions
+    const markerFrets = [3, 5, 7, 9, 12, 15, 17, 19, 21, 24];
+
+    for (const fret of markerFrets) {
+      if (fret > this.options.numFrets) continue;
 
       const x = this.options.nutWidth + (fret * this.options.fretWidth) - (this.options.fretWidth / 2);
 
@@ -417,6 +437,16 @@ export class FretboardRenderer {
       navigator.vibrate(10);
     }
 
+    // Play note audio
+    this.playNote(position);
+
+    // Visual feedback - brief pulse animation
+    const element = this.noteElements.get(`${position.string}-${position.fret}`);
+    if (element) {
+      element.classList.add('note-playing');
+      setTimeout(() => element.classList.remove('note-playing'), 200);
+    }
+
     if (this.options.onNoteClick) {
       this.options.onNoteClick(position);
     }
@@ -426,9 +456,11 @@ export class FretboardRenderer {
    * Handle note hover event
    */
   onNoteHover(position, element) {
-    element.style.opacity = '0.8';
-    element.style.transform = 'scale(1.1)';
-    element.style.transformOrigin = 'center';
+    // Add hover class for CSS animation (don't use inline styles - they override CSS transitions)
+    element.classList.add('hovered');
+
+    // Show tooltip with note info
+    this.showTooltip(position, element);
 
     if (this.options.onNoteHover) {
       this.options.onNoteHover(position);
@@ -439,8 +471,11 @@ export class FretboardRenderer {
    * Handle note leave event
    */
   onNoteLeave(position, element) {
-    element.style.opacity = '1';
-    element.style.transform = 'scale(1)';
+    // Remove hover class
+    element.classList.remove('hovered');
+
+    // Hide tooltip
+    this.hideTooltip();
 
     if (this.options.onNoteLeave) {
       this.options.onNoteLeave(position);
@@ -660,6 +695,436 @@ export class FretboardRenderer {
         }
       }, 250);
     });
+  }
+
+  /**
+   * Setup mouse wheel zoom for desktop
+   */
+  setupMouseWheelZoom() {
+    if (!this.container) return;
+
+    this.container.addEventListener('wheel', (e) => {
+      // Only zoom if ctrl/cmd is held (to allow normal scrolling)
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      e.preventDefault();
+
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newScale = Math.max(0.5, Math.min(3, this.currentScale + delta));
+
+      this.setZoom(newScale);
+    }, { passive: false });
+  }
+
+  /**
+   * Setup keyboard navigation for accessibility
+   */
+  setupKeyboardNavigation() {
+    if (!this.container) return;
+
+    // Make container focusable
+    this.container.setAttribute('tabindex', '0');
+    this.container.setAttribute('role', 'application');
+    this.container.setAttribute('aria-label', 'Guitar fretboard. Use arrow keys to navigate notes, Enter or Space to play.');
+
+    this.container.addEventListener('keydown', (e) => {
+      const noteKeys = Array.from(this.noteElements.keys());
+      if (noteKeys.length === 0) return;
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown':
+          e.preventDefault();
+          this.focusedNoteIndex = (this.focusedNoteIndex + 1) % noteKeys.length;
+          this.focusNote(noteKeys[this.focusedNoteIndex]);
+          break;
+
+        case 'ArrowLeft':
+        case 'ArrowUp':
+          e.preventDefault();
+          this.focusedNoteIndex = this.focusedNoteIndex <= 0 ? noteKeys.length - 1 : this.focusedNoteIndex - 1;
+          this.focusNote(noteKeys[this.focusedNoteIndex]);
+          break;
+
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (this.focusedNoteIndex >= 0 && this.focusedNoteIndex < noteKeys.length) {
+            const key = noteKeys[this.focusedNoteIndex];
+            const position = this.currentPositions.find(p => `${p.string}-${p.fret}` === key);
+            if (position) {
+              this.onNoteClick(position);
+            }
+          }
+          break;
+
+        case 'Escape':
+          this.unfocusAllNotes();
+          this.focusedNoteIndex = -1;
+          break;
+      }
+    });
+  }
+
+  /**
+   * Focus a specific note visually
+   */
+  focusNote(key) {
+    this.unfocusAllNotes();
+
+    const element = this.noteElements.get(key);
+    if (element) {
+      element.classList.add('keyboard-focused');
+      element.setAttribute('aria-selected', 'true');
+
+      // Announce to screen reader
+      const position = this.currentPositions.find(p => `${p.string}-${p.fret}` === key);
+      if (position) {
+        this.announceNote(position);
+      }
+    }
+  }
+
+  /**
+   * Remove focus from all notes
+   */
+  unfocusAllNotes() {
+    this.noteElements.forEach(element => {
+      element.classList.remove('keyboard-focused');
+      element.setAttribute('aria-selected', 'false');
+    });
+  }
+
+  /**
+   * Announce note to screen reader
+   */
+  announceNote(position) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('role', 'status');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.className = 'sr-only';
+    announcement.textContent = `${position.note}, string ${position.string}, fret ${position.fret}${position.isRoot ? ', root note' : ''}`;
+
+    document.body.appendChild(announcement);
+    setTimeout(() => announcement.remove(), 1000);
+  }
+
+  /**
+   * Initialize Web Audio for note playback
+   */
+  initAudio() {
+    if (!this.audioEnabled) return;
+
+    // Create audio context lazily on first user interaction
+    this.pendingAudioInit = true;
+  }
+
+  /**
+   * Ensure audio context is initialized (called on user interaction)
+   */
+  ensureAudioContext() {
+    if (this.audioContext) return;
+
+    try {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      console.warn('Web Audio API not supported:', e);
+      this.audioEnabled = false;
+    }
+  }
+
+  /**
+   * Play a note using Web Audio API
+   */
+  playNote(position) {
+    if (!this.audioEnabled) return;
+
+    this.ensureAudioContext();
+    if (!this.audioContext) return;
+
+    // Resume context if suspended (browser autoplay policy)
+    if (this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+
+    // Calculate frequency from note and octave
+    const frequency = this.getNoteFrequency(position);
+
+    // Create oscillator for guitar-like tone
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    const filterNode = this.audioContext.createBiquadFilter();
+
+    // Guitar-like waveform (triangle sounds softer)
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+
+    // Low-pass filter for warmer tone
+    filterNode.type = 'lowpass';
+    filterNode.frequency.setValueAtTime(2000, this.audioContext.currentTime);
+    filterNode.Q.setValueAtTime(1, this.audioContext.currentTime);
+
+    // ADSR envelope for plucked string sound
+    const now = this.audioContext.currentTime;
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(0.4, now + 0.01); // Attack
+    gainNode.gain.exponentialRampToValueAtTime(0.2, now + 0.1); // Decay
+    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.5); // Release
+
+    // Connect nodes
+    oscillator.connect(filterNode);
+    filterNode.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+
+    // Play
+    oscillator.start(now);
+    oscillator.stop(now + 1.5);
+  }
+
+  /**
+   * Calculate frequency for a note position
+   */
+  getNoteFrequency(position) {
+    // Standard guitar tuning frequencies (E2, A2, D3, G3, B3, E4)
+    const openStringFrequencies = [329.63, 246.94, 196.00, 146.83, 110.00, 82.41];
+
+    const stringIndex = position.string - 1;
+    const baseFreq = openStringFrequencies[stringIndex] || 196.00;
+
+    // Each fret is a semitone (multiply by 2^(1/12))
+    return baseFreq * Math.pow(2, position.fret / 12);
+  }
+
+  /**
+   * Toggle audio on/off
+   */
+  toggleAudio(enabled) {
+    this.audioEnabled = enabled;
+  }
+
+  /**
+   * Create tooltip element for note info
+   */
+  createTooltip() {
+    this.tooltip = document.createElement('div');
+    this.tooltip.className = 'fretboard-tooltip';
+    this.tooltip.style.cssText = `
+      position: absolute;
+      display: none;
+      background: rgba(15, 23, 42, 0.95);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'SF Pro Display', system-ui, sans-serif;
+      pointer-events: none;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(8px);
+      max-width: 200px;
+      transition: opacity 0.15s ease;
+    `;
+
+    this.container.style.position = 'relative';
+    this.container.appendChild(this.tooltip);
+  }
+
+  /**
+   * Show tooltip with note information
+   */
+  showTooltip(position, element) {
+    if (!this.tooltip) return;
+
+    const intervalNames = ['Root (P1)', 'Minor 2nd', 'Major 2nd', 'Minor 3rd', 'Major 3rd',
+                          'Perfect 4th', 'Tritone', 'Perfect 5th', 'Minor 6th',
+                          'Major 6th', 'Minor 7th', 'Major 7th'];
+
+    const positionRegion = position.fret <= 4 ? 'Open/Low' :
+                          position.fret <= 9 ? 'Middle' :
+                          position.fret <= 14 ? 'High' : 'Very High';
+
+    let html = `
+      <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+        ${position.note}${position.isRoot ? ' <span style="color: #ef4444;">(Root)</span>' : ''}
+      </div>
+      <div style="color: #94a3b8; font-size: 11px;">
+        String ${position.string} • Fret ${position.fret}<br>
+        Position: ${positionRegion}
+      </div>
+    `;
+
+    if (position.interval !== undefined) {
+      html += `<div style="color: #60a5fa; margin-top: 4px; font-size: 11px;">
+        ${intervalNames[position.interval] || 'Interval ' + position.interval}
+      </div>`;
+    }
+
+    if (position.degree) {
+      html += `<div style="color: #a78bfa; font-size: 11px;">
+        Scale degree: ${position.degree}
+      </div>`;
+    }
+
+    this.tooltip.innerHTML = html;
+    this.tooltip.style.display = 'block';
+
+    // Position tooltip near the element
+    const rect = this.container.getBoundingClientRect();
+    const circle = element.querySelector('circle');
+    const cx = parseFloat(circle.getAttribute('cx'));
+    const cy = parseFloat(circle.getAttribute('cy'));
+
+    // Account for current zoom
+    const scaledX = cx * this.currentScale;
+    const scaledY = cy * this.currentScale;
+
+    // Position above the note
+    this.tooltip.style.left = `${scaledX + 20}px`;
+    this.tooltip.style.top = `${scaledY - 20}px`;
+  }
+
+  /**
+   * Hide tooltip
+   */
+  hideTooltip() {
+    if (this.tooltip) {
+      this.tooltip.style.display = 'none';
+    }
+  }
+
+  /**
+   * Create zoom control buttons
+   */
+  createZoomControls() {
+    const controls = document.createElement('div');
+    controls.className = 'fretboard-zoom-controls';
+    controls.style.cssText = `
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      gap: 4px;
+      z-index: 100;
+    `;
+
+    const buttonStyle = `
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #374151;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      transition: all 0.2s ease;
+    `;
+
+    // Zoom in button
+    const zoomIn = document.createElement('button');
+    zoomIn.innerHTML = '+';
+    zoomIn.style.cssText = buttonStyle;
+    zoomIn.title = 'Zoom in (Ctrl + scroll)';
+    zoomIn.addEventListener('click', () => this.setZoom(this.currentScale + 0.25));
+    zoomIn.addEventListener('mouseenter', () => zoomIn.style.background = '#e5e7eb');
+    zoomIn.addEventListener('mouseleave', () => zoomIn.style.background = 'rgba(255, 255, 255, 0.9)');
+
+    // Zoom out button
+    const zoomOut = document.createElement('button');
+    zoomOut.innerHTML = '−';
+    zoomOut.style.cssText = buttonStyle;
+    zoomOut.title = 'Zoom out (Ctrl + scroll)';
+    zoomOut.addEventListener('click', () => this.setZoom(this.currentScale - 0.25));
+    zoomOut.addEventListener('mouseenter', () => zoomOut.style.background = '#e5e7eb');
+    zoomOut.addEventListener('mouseleave', () => zoomOut.style.background = 'rgba(255, 255, 255, 0.9)');
+
+    // Reset button
+    const reset = document.createElement('button');
+    reset.innerHTML = '⟲';
+    reset.style.cssText = buttonStyle;
+    reset.title = 'Reset zoom (double-tap on mobile)';
+    reset.addEventListener('click', () => this.resetZoom());
+    reset.addEventListener('mouseenter', () => reset.style.background = '#e5e7eb');
+    reset.addEventListener('mouseleave', () => reset.style.background = 'rgba(255, 255, 255, 0.9)');
+
+    // Audio toggle button
+    const audioBtn = document.createElement('button');
+    audioBtn.innerHTML = this.audioEnabled ? '🔊' : '🔇';
+    audioBtn.style.cssText = buttonStyle;
+    audioBtn.title = 'Toggle note audio';
+    audioBtn.addEventListener('click', () => {
+      this.audioEnabled = !this.audioEnabled;
+      audioBtn.innerHTML = this.audioEnabled ? '🔊' : '🔇';
+    });
+    audioBtn.addEventListener('mouseenter', () => audioBtn.style.background = '#e5e7eb');
+    audioBtn.addEventListener('mouseleave', () => audioBtn.style.background = 'rgba(255, 255, 255, 0.9)');
+
+    controls.appendChild(zoomIn);
+    controls.appendChild(zoomOut);
+    controls.appendChild(reset);
+    controls.appendChild(audioBtn);
+
+    this.container.style.position = 'relative';
+    this.container.appendChild(controls);
+  }
+
+  /**
+   * Create position color legend
+   */
+  createLegend() {
+    const legend = document.createElement('div');
+    legend.className = 'fretboard-legend';
+    legend.style.cssText = `
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: 'SF Pro Display', system-ui, sans-serif;
+      color: #374151;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    `;
+
+    const items = [
+      { color: '#FF6B6B', label: 'Root' },
+      { color: '#10B981', label: 'Low (0-4)' },
+      { color: '#3B82F6', label: 'Mid (5-9)' },
+      { color: '#8B5CF6', label: 'High (10-14)' },
+      { color: '#EC4899', label: 'V.High (15+)' }
+    ];
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display: flex; align-items: center; gap: 6px;';
+
+      const dot = document.createElement('span');
+      dot.style.cssText = `
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: ${item.color};
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      `;
+
+      const label = document.createElement('span');
+      label.textContent = item.label;
+
+      row.appendChild(dot);
+      row.appendChild(label);
+      legend.appendChild(row);
+    });
+
+    this.container.appendChild(legend);
   }
 }
 
