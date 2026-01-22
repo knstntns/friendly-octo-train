@@ -487,13 +487,14 @@ export class ChordEngine {
     for (let i = 1; i < length; i++) {
       const lastChord = progression[progression.length - 1];
       const isLastPosition = (i === length - 1);
+      const isPenultimate = (i === length - 2);
 
       let nextChord;
 
       // Force ending on tonic for most progressions
       if (isLastPosition && Math.random() > 0.2) {
         nextChord = { ...layers.mainChords[0], layer: 'main' };
-      } else if (isLastPosition - 1 === i && Math.random() > 0.4) {
+      } else if (isPenultimate && Math.random() > 0.4) {
         // Penultimate chord - prefer V or IV for strong cadence
         const cadentialChord = Math.random() > 0.5 ? layers.mainChords[4] : layers.mainChords[3];
         nextChord = { ...cadentialChord, layer: 'main' };
